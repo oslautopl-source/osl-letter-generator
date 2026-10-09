@@ -44,9 +44,9 @@
     .para3 { top: 153mm; }
     .thankyou { position: absolute; left: 10mm; top: 164mm; font: 10.5pt Arial, Helvetica, sans-serif; }
     .faithfully { position: absolute; left: 10mm; top: 172mm; font: 10.5pt Arial, Helvetica, sans-serif; }
-    /* This asset includes the company authorization text, handwritten signature and Director label.
-       Position it as a single image; do not add a round company seal on the Chola TA letter. */
-    .director-signature { position: absolute; z-index: 3; left: 9.2mm; top: 168mm; width: 52mm; height: auto; pointer-events: none; }
+    /* This transparent asset includes the company authorization text, handwritten signature and Director label.
+       Overlay it on the complete signatory block; do not use the round company seal on this Chola TA letter. */
+    .director-signature { position: absolute; z-index: 3; left: 9.2mm; top: 168mm; width: 60mm; height: auto; pointer-events: none; }
     .director-name { position: absolute; z-index: 2; left: 10mm; top: 207mm; font: 10.5pt Arial, Helvetica, sans-serif; }
     .bank-heading { position: absolute; left: 10mm; top: 215mm; font: 9.5pt 'Times New Roman', Times, serif; }
     .bank-table { position: absolute; left: 10mm; top: 218.2mm; width: 190mm; border-collapse: collapse; table-layout: fixed; font: 7.2pt/1.1 'Times New Roman', Times, serif; color: #111; }
@@ -405,8 +405,8 @@
         pdf.setFontSize(10.5);
         pdf.text("(Pawan Kumar Goyal)", 10, 210.0);
 
-        // The cropped transparent signature image is slightly larger; keep its ink clear of the bank table.
-        const signatureWidth = 52;
+        // Overlay the larger transparent signature artwork over the signatory block, while keeping the bank table clear.
+        const signatureWidth = 60;
         const signatureHeight = signatureWidth * directorSignature.naturalHeight / directorSignature.naturalWidth;
         pdf.addImage(directorSignature, "PNG", 9.2, 168, signatureWidth, signatureHeight, undefined, "FAST");
 
