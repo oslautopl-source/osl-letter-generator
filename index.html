@@ -139,7 +139,7 @@
     .stamp-signature {
       position: absolute;
       top: -18mm;
-      left: 14mm;
+      left: 0mm; /* Align stamp left edge with company/signatory text */
       z-index: 0;
       display: block;
       width: 55mm;
@@ -549,7 +549,7 @@
         // Draw it before the signatory text so the typed name remains legible over the transparent ink.
         const stampWidth = 55;
         const stampHeight = stampWidth * stampImg.naturalHeight / stampImg.naturalWidth;
-        const stampX = left + 14;
+        const stampX = left; // Align with "For, OSL..." and the manager name
         const stampY = y - 18;
         pdf.addImage(stampImg, "PNG", stampX, stampY, stampWidth, stampHeight, undefined, "FAST");
         y += 22;
