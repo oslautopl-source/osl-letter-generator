@@ -133,8 +133,19 @@
       overflow-wrap: anywhere;
     }
 
-    .signature-block { margin-top: 22px; }
-    .signature-block p { margin: 3px 0; }
+    .signature-block { margin-top: 22px; position: relative; }
+    .signature-block p { margin: 3px 0; position: relative; z-index: 1; }
+    .stamp-area { height: 22mm; position: relative; }
+    .stamp-signature {
+      position: absolute;
+      top: -18mm;
+      left: 14mm;
+      z-index: 0;
+      display: block;
+      width: 55mm;
+      height: auto;
+      pointer-events: none;
+    }
 
     .letter-footer {
       position: absolute;
@@ -237,7 +248,9 @@
           <div class="signature-block">
             <p>Thanks &amp; Regards</p>
             <p>For, OSL Automotives Pvt. Ltd.</p>
-            <br /><br />
+            <div class="stamp-area" aria-label="Authorized stamp and signature area">
+              <img class="stamp-signature" src="stamp_signature.png" alt="Authorized company stamp and signature" />
+            </div>
             <p>(<span id="p_managerName"></span>)</p>
             <p>Manager Accounts</p>
           </div>
@@ -345,7 +358,7 @@
       return new Promise((resolve, reject) => {
         if (img.complete) {
           if (img.naturalWidth > 0 && img.naturalHeight > 0) resolve();
-          else reject(new Error(`${img.getAttribute("src")} could not be loaded. Keep header.png and footer.png beside index.html and check the file names.`));
+          else reject(new Error(`${img.getAttribute("src")} could not be loaded. Keep header.png, footer.png, and stamp_signature.png beside index.html and check the file names.`));
           return;
         }
         img.addEventListener("load", () => {
@@ -353,7 +366,7 @@
           else reject(new Error(`${img.getAttribute("src")} loaded without usable dimensions.`));
         }, { once: true });
         img.addEventListener("error", () => {
-          reject(new Error(`${img.getAttribute("src")} could not be loaded. Keep header.png and footer.png beside index.html and check the file names.`));
+          reject(new Error(`${img.getAttribute("src")} could not be loaded. Keep header.png, footer.png, and stamp_signature.png beside index.html and check the file names.`));
         }, { once: true });
       });
     }
@@ -459,7 +472,12 @@
 
         const headerImg = document.querySelector(".letter-header img");
         const footerImg = document.querySelector(".letter-footer img");
-        await Promise.all([waitForImage(headerImg), waitForImage(footerImg)]);
+        const stampImg = document.querySelector(".stamp-signature");
+        await Promise.all([
+          waitForImage(headerImg),
+          waitForImage(footerImg),
+          waitForImage(stampImg)
+        ]);
 
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF({
@@ -527,8 +545,13 @@
           x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 0.8
         });
 
-        // Leave clear space for the authorized signatory to apply the approved stamp/signature.
-        // The supplied sample is not automatically embedded in an official credit letter.
+        // Overlay the authorized stamp/signature across the signing area, matching the approved sample.
+        // Draw it before the signatory text so the typed name remains legible over the transparent ink.
+        const stampWidth = 55;
+        const stampHeight = stampWidth * stampImg.naturalHeight / stampImg.naturalWidth;
+        const stampX = left + 14;
+        const stampY = y - 18;
+        pdf.addImage(stampImg, "PNG", stampX, stampY, stampWidth, stampHeight, undefined, "FAST");
         y += 22;
 
         y = addPdfParagraph(pdf, `(${data.managerName})`, {
