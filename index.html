@@ -362,10 +362,10 @@
       const x = options.x ?? 14;
       const y = options.y ?? 50;
       const maxWidth = options.maxWidth ?? 182;
-      const fontSize = options.fontSize ?? 8.5;
+      const fontSize = options.fontSize ?? 10;
       const bold = options.bold ?? false;
       const gapAfter = options.gapAfter ?? 3.2;
-      const lineHeight = fontSize * 25.4 / 72 * 1.22;
+      const lineHeight = fontSize * 25.4 / 72 * 1.28;
 
       pdf.setFont("helvetica", bold ? "bold" : "normal");
       pdf.setFontSize(fontSize);
@@ -440,52 +440,52 @@
 
         pdf.setTextColor(25, 25, 25);
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(8.5);
+        pdf.setFontSize(9.5);
         pdf.text(`Date:- ${data.letterDate || ""}`, 210 - right, 39.5, { align: "right" });
 
         let y = 48.5;
         y = addPdfParagraph(pdf,
           "To,\nThe Regional Manager/RCFI\nTata Motors Limited\nRegion: - EAST",
-          { x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 6.2 }
+          { x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 5.2 }
         );
 
         const subject = `Sub:- Credit request for Rs. ${data.amountLakh} Lakh for purchase of ${data.lob || "__________"} till ${data.tillDate}`;
         y = addPdfParagraph(pdf, subject, {
-          x: left, y, maxWidth: contentWidth, fontSize: 8.5, bold: true, gapAfter: 3.2
+          x: left, y, maxWidth: contentWidth, fontSize: 10, bold: true, gapAfter: 3.2
         });
 
         y = addPdfParagraph(pdf,
           `I/We hereby request Tata Motors Limited (TML) to allow credit billing in TML under ${data.payerCode} Payer code for commercial vehicles.`,
-          { x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 3.0 }
+          { x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 3.8 }
         );
         y = addPdfParagraph(pdf,
           `I/We also confirm that we will repay the credit utilization amount within ${data.tillDate}.`,
-          { x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 3.0 }
+          { x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 3.8 }
         );
         y = addPdfParagraph(pdf,
           "Further, I/We hereby authorize TML to swap the invoices against our Inventory funding limits (Channel finance) if available/reinstated on/before the above credit period.",
-          { x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 3.0 }
+          { x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 3.8 }
         );
         y = addPdfParagraph(pdf,
           `Further, in case of non-payment of the said amount on due date, TML can deposit our cheque no : ${data.chequeNo} Date ____________ for Rs. ____________ and liability for bouncing the cheque, if any, will be on our part.`,
-          { x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 3.0 }
+          { x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 3.8 }
         );
         y = addPdfParagraph(pdf,
           "I/We also agree to pay interest @ 11% p.a on this credit amount utilized from invoice date to the date of full clearance of the dues.",
-          { x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 7.0 }
+          { x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 6.0 }
         );
 
         y = addPdfParagraph(pdf, "Thanks & Regards", {
-          x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 1.0
+          x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 1.0
         });
         y = addPdfParagraph(pdf, "For, OSL Automotives Pvt. Ltd.", {
-          x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 8.3
+          x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 8.3
         });
         y = addPdfParagraph(pdf, `(${data.managerName})`, {
-          x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 0.8
+          x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 0.8
         });
         y = addPdfParagraph(pdf, "Manager Accounts", {
-          x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 0
+          x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 0
         });
 
         // Protect the footer: fail clearly rather than overlap it if a field is unexpectedly long.
