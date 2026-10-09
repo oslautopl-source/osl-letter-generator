@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#142b63">
+  <title>OSL Automotives - Chola TA Request Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root { --navy: #16265f; --red: #c8102e; --ink: #222; --muted: #596274; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 20px; background: #f2f3f7; color: var(--ink); font-family: Arial, Helvetica, sans-serif; }
+    .container { max-width: 1080px; margin: 0 auto; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 0 0 18px; }
+    h1 { color: var(--navy); font-size: clamp(22px, 3vw, 30px); margin: 0; }
+    .back { display: inline-block; padding: 10px 14px; color: var(--navy); background: #fff; border: 1px solid #d4d9e5; border-radius: 8px; font-weight: 700; text-decoration: none; }
+    .form-box { padding: 22px; margin-bottom: 24px; background: #fff; border-radius: 10px; box-shadow: 0 3px 18px #17264c12; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px 18px; }
+    label { display: block; color: #333; font-size: 14px; font-weight: 700; }
+    input { display: block; width: 100%; margin-top: 6px; padding: 10px 11px; border: 1px solid #c9ced8; border-radius: 6px; background: #fff; font: inherit; font-size: 14px; }
+    input:focus { outline: 2px solid #b9c8ff; border-color: #6b82cf; }
+    .span-2 { grid-column: 1 / -1; }
+    .hint { display: block; margin-top: 5px; font-size: 12px; font-weight: 400; line-height: 1.4; color: var(--muted); }
+    .btn-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 22px; }
+    button { border: 0; border-radius: 6px; padding: 12px 24px; color: #fff; background: var(--red); font-size: 15px; font-weight: 700; cursor: pointer; }
+    button.pdf-btn { background: var(--navy); }
+    button:disabled { opacity: .55; cursor: wait; }
+    .status { min-height: 20px; margin-top: 14px; text-align: center; font-size: 13px; font-weight: 700; }
+    .status.success { color: #18732b; } .status.error { color: #c8102e; } .status.loading { color: var(--navy); }
+    .preview-heading { margin: 24px 0 12px; color: var(--navy); font-size: 20px; }
+    .paper-scroll { width: 100%; overflow-x: auto; padding: 8px 0 16px; }
+    #letter { position: relative; display: none; width: 210mm; height: 297mm; margin: 0 auto; overflow: hidden; background: #fff; box-shadow: 0 2px 18px #00000020; }
+    .letter-header { position: absolute; top: 0; left: 0; width: 100%; line-height: 0; }
+    .letter-header img { display: block; width: 100%; height: auto; }
+    .letter-footer { position: absolute; left: 0; right: 0; bottom: 0; line-height: 0; }
+    .letter-footer img { display: block; width: 100%; height: auto; }
+    .date-line { position: absolute; left: 10mm; right: 10mm; top: 64mm; text-align: right; font: bold 9.5pt Arial, Helvetica, sans-serif; }
+    .recipient { position: absolute; left: 10mm; top: 64.5mm; width: 155mm; font: bold 9.4pt/1.33 'Times New Roman', Times, serif; }
+    .subject { position: absolute; left: 10mm; top: 101mm; font: bold 10pt 'Times New Roman', Times, serif; text-decoration: underline; }
+    .salutation { position: absolute; left: 10mm; top: 115.5mm; font: 10pt 'Times New Roman', Times, serif; }
+    .body-text { position: absolute; left: 10mm; right: 10mm; font: 9.5pt/1.3 Arial, Helvetica, sans-serif; }
+    .para1 { top: 124mm; }
+    .para2 { top: 144mm; }
+    .para3 { top: 153mm; }
+    .thankyou { position: absolute; left: 10mm; top: 166mm; font: 10pt Arial, Helvetica, sans-serif; }
+    .faithfully { position: absolute; left: 10mm; top: 175mm; font: 10pt Arial, Helvetica, sans-serif; }
+    .company-sign { position: absolute; z-index: 2; left: 10mm; top: 184mm; font: bold 10pt Arial, Helvetica, sans-serif; }
+    .stamp { position: absolute; z-index: 1; left: 18mm; top: 180mm; width: 40mm; height: auto; pointer-events: none; }
+    .director-name { position: absolute; z-index: 2; left: 10mm; top: 201mm; font: 10pt Arial, Helvetica, sans-serif; }
+    .director-title { position: absolute; z-index: 2; left: 10mm; top: 206.3mm; font: 10pt Arial, Helvetica, sans-serif; }
+    .bank-heading { position: absolute; left: 10mm; top: 215mm; font: 9.2pt 'Times New Roman', Times, serif; }
+    .bank-table { position: absolute; left: 10mm; top: 218.2mm; width: 190mm; border-collapse: collapse; table-layout: fixed; font: 7.2pt/1.1 'Times New Roman', Times, serif; color: #111; }
+    .bank-table td { border: .25mm solid #333; padding: 1mm 1.2mm; height: 5.2mm; vertical-align: middle; overflow-wrap: anywhere; }
+    .bank-table td.label { width: 17%; }
+    .bank-table td.value { font-weight: bold; }
+    .bank-table .beneficiary { font-weight: bold; font-size: 8pt; }
+    .bank-table .ifsc-row td { font-size: 6.8pt; }
+    @media (max-width: 700px) { body { padding: 12px; } .form-box { padding: 16px; } .form-grid { grid-template-columns: 1fr; } .span-2 { grid-column: auto; } #letter { margin-left: 0; margin-right: 0; } }
+    @media print { body { padding: 0; background: #fff; } .topbar, .form-box, .preview-heading { display: none !important; } #letter { display: block !important; margin: 0; box-shadow: none; } }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header class="topbar">
+      <h1>Chola TA Request Generator</h1>
+      <a class="back" href="index.html">&#8592; Back to Home</a>
+    </header>
+
+    <section class="form-box" aria-label="Chola TA form">
+      <form id="taForm">
+        <div class="form-grid">
+          <label for="letterDate">Letter Date
+            <input type="date" id="letterDate" required>
+          </label>
+          <label for="amount">Trade Advance Amount (Rs.)
+            <input type="number" id="amount" value="15000000.00" min="0" step="0.01" required>
+          </label>
+          <label for="amountWords" class="span-2">Amount in Words
+            <input type="text" id="amountWords" value="One Crore Fifty Lakhs Zero and Paise Zero Only" required>
+            <span class="hint">Auto-updates when the amount changes; you can edit the wording manually if needed.</span>
+          </label>
+        </div>
+        <div class="btn-row">
+          <button type="button" id="previewBtn">Submit / Preview</button>
+          <button type="button" class="pdf-btn" id="pdfBtn">Generate PDF</button>
+        </div>
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+      </form>
+    </section>
+
+    <h2 class="preview-heading">Letter Preview</h2>
+    <div class="paper-scroll">
+      <section id="letter" aria-label="Chola TA request letter">
+        <div class="letter-header"><img src="header.png" alt="OSL Automotives letterhead"></div>
+        <div class="date-line">Date: <span id="p_date"></span></div>
+        <div class="recipient">To,<br>The Branch Manager<br>Cholamandalam Investment &amp; Finance Co.Ltd.<br>Spencer Plaza, Burdwan Road, Shop No.: 18<br>1st Floor, Siliguri</div>
+        <div class="subject">Sub.: TA Request</div>
+        <div class="salutation">Sir,</div>
+        <div class="body-text para1" id="p_para1"></div>
+        <div class="body-text para2">The amount will be subsequently adjusted with the forth coming funding / Case.</div>
+        <div class="body-text para3">You Kind consideration is highly solicited and oblige.</div>
+        <div class="thankyou">Thanking You,</div>
+        <div class="faithfully">Yours faithfully,</div>
+        <img class="stamp" src="stamp_signature.png" alt="Authorized company stamp and signature">
+        <div class="company-sign">For OSL Automotives Pvt Ltd</div>
+        <div class="director-name">(Pawan Kumar Goyal)</div>
+        <div class="director-title">Director</div>
+        <div class="bank-heading"><strong>Dealer Bank Details:</strong></div>
+        <table class="bank-table" aria-label="Dealer bank details">
+          <colgroup><col style="width:17%"><col style="width:31%"><col style="width:18%"><col style="width:34%"></colgroup>
+          <tbody>
+            <tr><td class="label">Beneficiary Name</td><td colspan="3" class="beneficiary">OSL AUTOMOTIVES PVT. LTD.</td></tr>
+            <tr><td class="label">Bank Name</td><td class="value">AXIS BANK LTD.</td><td class="label">Branch Name</td><td class="value">SILIGURI</td></tr>
+            <tr><td class="label">Branch Place</td><td>Spectrum House, Sevoke Road,</td><td class="label">Branch City</td><td>SILIGURI</td></tr>
+            <tr><td class="label">PIN Code</td><td>734001</td><td class="label">Branch Code</td><td>0 3 5</td></tr>
+            <tr><td class="label">MICR No.</td><td colspan="3">734211002</td></tr>
+            <tr><td class="label">Account Type</td><td colspan="3">Cash Credit</td></tr>
+            <tr><td class="label">Account No.</td><td colspan="3">(as appearing in the Cheque book) &nbsp; 0 3 5 0 1 0 3 0 0 0 0 4 0 8 4</td></tr>
+            <tr class="ifsc-row"><td class="label">IFSC CODE</td><td class="value">For RTGS transfer<br>UTIB0000035</td><td class="value">For NEFT transfer</td><td class="value">UTIB0000035</td></tr>
+          </tbody>
+        </table>
+        <div class="letter-footer"><img src="footer.png" alt="OSL Automotives footer"></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    "use strict";
+    const $ = (id) => document.getElementById(id);
+    const letter = $("letter");
+    const amountInput = $("amount");
+    const amountWordsInput = $("amountWords");
+    let wordsEditedManually = false;
+
+    function setLocalDateDefault() {
+      const now = new Date();
+      const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+      $("letterDate").value = localDate;
+    }
+
+    function numberToWordsBelowThousand(number) {
+      const ones = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+      const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+      let n = Math.floor(number);
+      const parts = [];
+      if (n >= 100) { parts.push(`${ones[Math.floor(n / 100)]} Hundred`); n %= 100; }
+      if (n >= 20) { const t = tens[Math.floor(n / 10)]; const o = n % 10; parts.push(o ? `${t} ${ones[o]}` : t); }
+      else if (n > 0 || parts.length === 0) parts.push(ones[n]);
+      return parts.join(" ");
+    }
+
+    function integerToIndianWords(value) {
+      let n = Math.floor(Math.abs(value));
+      if (!Number.isSafeInteger(n)) throw new Error("Please enter an amount within the supported numeric range.");
+      if (n === 0) return "Zero";
+      const groups = [
+        { divisor: 10000000, label: "Crore" },
+        { divisor: 100000, label: "Lakh" },
+        { divisor: 1000, label: "Thousand" },
+        { divisor: 1, label: "" }
+      ];
+      const parts = [];
+      for (const group of groups) {
+        const amount = Math.floor(n / group.divisor);
+        if (amount > 0) {
+          n %= group.divisor;
+          const words = numberToWordsBelowThousand(amount);
+          if (group.label) parts.push(`${words} ${group.label}${amount > 1 ? "s" : ""}`);
+          else parts.push(words);
+        }
+      }
+      return parts.join(" ");
+    }
+
+    function amountToWords(value) {
+      const amount = Number(value);
+      if (!Number.isFinite(amount) || amount < 0) return "";
+      const rupees = Math.floor(amount + 1e-8);
+      const paise = Math.round((amount - rupees) * 100);
+      // Preserve the supplied letter's wording pattern: "... Zero and Paise Zero Only".
+      return `${integerToIndianWords(rupees)} Zero and Paise ${numberToWordsBelowThousand(paise)} Only`;
+    }
+
+    function formatDate(dateValue) {
+      if (!dateValue) return "";
+      const [year, month, day] = dateValue.split("-").map(Number);
+      return `${String(day).padStart(2, "0")}.${String(month).padStart(2, "0")}.${year}`;
+    }
+
+    function getData() {
+      return {
+        date: formatDate($("letterDate").value),
+        dateInput: $("letterDate").value,
+        amount: Number(amountInput.value),
+        amountFormatted: Number(amountInput.value).toFixed(2),
+        amountWords: amountWordsInput.value.trim()
+      };
+    }
+
+    function fillPreview() {
+      const data = getData();
+      $("p_date").textContent = data.date;
+      $("p_para1").textContent = `Arrange to Renew the Trade Advance of Rs. ${data.amountFormatted} Lakhs ( Rupees ${data.amountWords.replace(/^Rupees?\s+/i, "")} ). In favor of OSL Automotives Pvt Ltd.`;
+      return data;
+    }
+
+    function validateForm() {
+      if (!$("taForm").reportValidity()) return false;
+      const amount = Number(amountInput.value);
+      if (!Number.isFinite(amount) || amount < 0) {
+        setStatus("Please enter a valid non-negative amount.", "error");
+        return false;
+      }
+      return true;
+    }
+
+    function setStatus(message, type = "") {
+      const status = $("status");
+      status.className = `status ${type}`.trim();
+      status.textContent = message;
+    }
+
+    function previewLetter() {
+      if (!validateForm()) return;
+      fillPreview();
+      letter.style.display = "block";
+      letter.scrollIntoView({ behavior: "smooth", block: "start" });
+      setStatus("Preview ready.", "success");
+    }
+
+    function waitForImage(img) {
+      return new Promise((resolve, reject) => {
+        if (img.complete) return img.naturalWidth > 0 ? resolve() : reject(new Error(`Could not load ${img.getAttribute("src")}. Keep all required PNG files beside chola-ta.html.`));
+        img.addEventListener("load", () => img.naturalWidth > 0 ? resolve() : reject(new Error(`Invalid image: ${img.getAttribute("src")}`)), { once: true });
+        img.addEventListener("error", () => reject(new Error(`Could not load ${img.getAttribute("src")}. Keep all required PNG files beside chola-ta.html.`)), { once: true });
+      });
+    }
+
+    function addImageFitWidth(pdf, img, y, maxHeight) {
+      if (!img.naturalWidth || !img.naturalHeight) throw new Error(`Image failed to load: ${img.getAttribute("src")}`);
+      const scale = Math.min(210 / img.naturalWidth, maxHeight / img.naturalHeight);
+      const width = img.naturalWidth * scale;
+      const height = img.naturalHeight * scale;
+      const x = (210 - width) / 2;
+      pdf.addImage(img, "PNG", x, y, width, height, undefined, "FAST");
+      return { x, y, width, height };
+    }
+
+    function addImageBottom(pdf, img, maxHeight) {
+      if (!img.naturalWidth || !img.naturalHeight) throw new Error(`Image failed to load: ${img.getAttribute("src")}`);
+      const scale = Math.min(210 / img.naturalWidth, maxHeight / img.naturalHeight);
+      const width = img.naturalWidth * scale;
+      const height = img.naturalHeight * scale;
+      const x = (210 - width) / 2;
+      const y = 297 - height;
+      pdf.addImage(img, "PNG", x, y, width, height, undefined, "FAST");
+      return { x, y, width, height };
+    }
+
+    function addText(pdf, text, x, y, options = {}) {
+      pdf.setFont("times", options.bold ? "bold" : "normal");
+      pdf.setFontSize(options.size || 9.5);
+      pdf.setTextColor(20, 20, 20);
+      const maxWidth = options.maxWidth || 190;
+      const lineHeight = options.lineHeight || (options.size || 9.5) * 25.4 / 72 * 1.25;
+      const lines = pdf.splitTextToSize(String(text), maxWidth);
+      lines.forEach((line, index) => pdf.text(line, x, y + index * lineHeight));
+      return y + Math.max(1, lines.length) * lineHeight;
+    }
+
+    function drawTable(pdf, startY) {
+      const left = 10;
+      const widths = [32, 59, 34, 65];
+      const rows = [
+        { h: 5.2, cells: [{ text: "Beneficiary Name", w: 32 }, { text: "OSL AUTOMOTIVES PVT. LTD.", w: 158, bold: true, size: 7.8 }] },
+        { h: 5.2, cells: [{ text: "Bank Name", w: 32 }, { text: "AXIS BANK LTD.", w: 59, bold: true }, { text: "Branch Name", w: 34 }, { text: "SILIGURI", w: 65, bold: true }] },
+        { h: 5.2, cells: [{ text: "Branch Place", w: 32 }, { text: "Spectrum House, Sevoke Road,", w: 59 }, { text: "Branch City", w: 34 }, { text: "SILIGURI", w: 65 }] },
+        { h: 5.2, cells: [{ text: "PIN Code", w: 32 }, { text: "734001", w: 59 }, { text: "Branch Code", w: 34 }, { text: "0 3 5", w: 65 }] },
+        { h: 4.8, cells: [{ text: "MICR No.", w: 32 }, { text: "734211002", w: 158 }] },
+        { h: 4.8, cells: [{ text: "Account Type", w: 32 }, { text: "Cash Credit", w: 158 }] },
+        { h: 4.8, cells: [{ text: "Account No.", w: 32 }, { text: "(as appearing in the Cheque book)   0 3 5 0 1 0 3 0 0 0 0 4 0 8 4", w: 158, size: 6.8 }] },
+        { h: 6.0, cells: [{ text: "IFSC CODE", w: 32, bold: true, size: 6.8 }, { text: "For RTGS transfer   UTIB0000035", w: 59, bold: true, size: 6.5 }, { text: "For NEFT transfer", w: 34, bold: true, size: 6.2 }, { text: "UTIB0000035", w: 65, bold: true, size: 6.8 }] }
+      ];
+      let y = startY;
+      rows.forEach((row) => {
+        let x = left;
+        row.cells.forEach((cell) => {
+          const w = cell.w;
+          pdf.setDrawColor(45, 45, 45);
+          pdf.setLineWidth(0.22);
+          pdf.rect(x, y, w, row.h);
+          pdf.setFont("times", cell.bold ? "bold" : "normal");
+          pdf.setFontSize(cell.size || 7.1);
+          pdf.setTextColor(20, 20, 20);
+          const lines = pdf.splitTextToSize(cell.text, w - 2.2);
+          const lineHeight = (cell.size || 7.1) * 25.4 / 72 * 1.05;
+          const totalTextH = lines.length * lineHeight;
+          const firstY = y + Math.max(1.0, (row.h - totalTextH) / 2) + lineHeight * 0.75;
+          lines.slice(0, 2).forEach((line, i) => pdf.text(line, x + 1.1, firstY + i * lineHeight));
+          x += w;
+        });
+        y += row.h;
+      });
+      return y;
+    }
+
+    async function generatePDF() {
+      if (!validateForm()) return;
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        setStatus("PDF library did not load. Check your internet connection and reload the page.", "error");
+        return;
+      }
+      const button = $("pdfBtn");
+      button.disabled = true;
+      button.textContent = "Generating PDF...";
+      setStatus("Generating a single-page A4 PDF...", "loading");
+      try {
+        const data = fillPreview();
+        const header = document.querySelector(".letter-header img");
+        const footer = document.querySelector(".letter-footer img");
+        const stamp = document.querySelector(".stamp");
+        await Promise.all([waitForImage(header), waitForImage(footer), waitForImage(stamp)]);
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
+        pdf.setProperties({ title: `OSL Chola TA Request - ${data.date}`, author: "OSL Automotives Pvt. Ltd.", subject: "Trade Advance request" });
+        addImageFitWidth(pdf, header, 0, 34);
+        const footerPlacement = addImageBottom(pdf, footer, 28);
+
+        // Fixed coordinates mirror the browser preview; text remains selectable and crisp.
+        pdf.setTextColor(20, 20, 20);
+        pdf.setFont("times", "bold");
+        pdf.setFontSize(9.5);
+        pdf.text(`Date:  ${data.date}`, 200, 66.2, { align: "right" });
+        const address = ["To,", "The Branch Manager", "Cholamandalam Investment & Finance Co.Ltd.", "Spencer Plaza, Burdwan Road, Shop No.: 18", "1st Floor, Siliguri"];
+        address.forEach((line, i) => pdf.text(line, 10, 66.5 + i * 4.25));
+        pdf.setFont("times", "bold");
+        pdf.setFontSize(10);
+        pdf.text("Sub.: TA Request", 10, 103.8);
+        pdf.setLineWidth(0.25);
+        pdf.line(10, 104.2, 40, 104.2);
+        pdf.setFont("times", "normal");
+        pdf.setFontSize(10);
+        pdf.text("Sir,", 10, 118.1);
+
+        const body = `Arrange to Renew the Trade Advance of Rs. ${data.amountFormatted} Lakhs ( Rupees ${data.amountWords.replace(/^Rupees?\s+/i, "")} ). In favor of OSL Automotives Pvt Ltd.`;
+        const para1Lines = pdf.splitTextToSize(body, 190);
+        para1Lines.forEach((line, i) => pdf.text(line, 10, 127 + i * 4.2));
+        pdf.setFont("times", "normal");
+        pdf.setFontSize(9.5);
+        pdf.text("The amount will be subsequently adjusted with the forth coming funding / Case.", 10, 147.2);
+        pdf.text("You Kind consideration is highly solicited and oblige.", 10, 156.2);
+        pdf.setFont("times", "normal");
+        pdf.setFontSize(10);
+        pdf.text("Thanking You,", 10, 169.3);
+        pdf.text("Yours faithfully,", 10, 178.3);
+
+        // Use the authorized stamp/signature asset as an overlay, like the reference letter.
+        const stampWidth = 40;
+        const stampHeight = stampWidth * stamp.naturalHeight / stamp.naturalWidth;
+        pdf.addImage(stamp, "PNG", 18, 180, stampWidth, stampHeight, undefined, "FAST");
+        pdf.setFont("times", "bold");
+        pdf.setFontSize(10);
+        pdf.text("For OSL Automotives Pvt Ltd", 10, 187.3);
+        pdf.setFont("times", "normal");
+        pdf.text("(Pawan Kumar Goyal)", 10, 202.0);
+        pdf.text("Director", 10, 207.3);
+
+        pdf.setFont("times", "normal");
+        pdf.setFontSize(9.2);
+        pdf.text("Dealer Bank Details:", 10, 216.5);
+        const tableBottom = drawTable(pdf, 218.7);
+        if (tableBottom > footerPlacement.y - 2) throw new Error("Bank details table overlaps the footer. Please check the header/footer image dimensions.");
+
+        const fileDate = (data.dateInput || "Letter").replace(/[^0-9-]/g, "");
+        pdf.save(`OSL_Chola_TA_Request_${fileDate || "Letter"}.pdf`);
+        setStatus("PDF generated: one A4 page with letterhead and dealer bank details.", "success");
+      } catch (error) {
+        console.error("Chola TA PDF generation failed:", error);
+        setStatus(`PDF তৈরি করা যায়নি: ${error.message}`, "error");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Generate PDF";
+      }
+    }
+
+    amountWordsInput.addEventListener("input", () => { wordsEditedManually = true; });
+    amountInput.addEventListener("input", () => {
+      if (!wordsEditedManually) {
+        try { amountWordsInput.value = amountToWords(amountInput.value); }
+        catch (_) { amountWordsInput.value = ""; }
+      }
+    });
+    $("previewBtn").addEventListener("click", previewLetter);
+    $("pdfBtn").addEventListener("click", generatePDF);
+    setLocalDateDefault();
+    amountWordsInput.value = "One Crore Fifty Lakhs Zero and Paise Zero Only";
+  </script>
+</body>
+</html>

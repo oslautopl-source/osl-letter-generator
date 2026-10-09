@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OSL Automotives - Credit Request Letter Generator</title>
+
+  <!-- Native-text PDF generation keeps document text crisp and undistorted. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    @page { size: A4 portrait; margin: 0; }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #f2f2f2;
+      color: #222;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .container { max-width: 900px; margin: 0 auto; }
+    h2 { color: #16215c; text-align: center; }
+
+    .form-box {
+      padding: 25px;
+      margin-bottom: 30px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, .1);
+    }
+
+    .form-box label {
+      display: block;
+      margin-top: 14px;
+      color: #333;
+      font-weight: 700;
+    }
+
+    .form-box input[type="text"],
+    .form-box input[type="date"] {
+      width: 100%;
+      margin-top: 4px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .lob-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 8px;
+      padding: 12px;
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    .lob-options label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin: 0;
+      font-weight: 400;
+      cursor: pointer;
+    }
+
+    .btn-row { margin-top: 20px; text-align: center; }
+    .btn-row button {
+      margin: 5px;
+      padding: 12px 30px;
+      border: 0;
+      border-radius: 5px;
+      background: #c8102e;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .btn-row button.pdf-btn { background: #16215c; }
+    .btn-row button:hover { opacity: .88; }
+    .btn-row button:disabled { opacity: .55; cursor: wait; }
+
+    .status-msg {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .status-msg.success { color: #18732b; }
+    .status-msg.error { color: #c8102e; }
+    .status-msg.loading { color: #16215c; }
+
+    /* Exact A4 letter canvas. Do not add padding to this outer element. */
+    #letter {
+      display: none;
+      position: relative;
+      width: 210mm;
+      height: 297mm;
+      min-width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      overflow: hidden;
+      background: #fff;
+      box-sizing: border-box;
+    }
+
+    .letter-header { width: 100%; line-height: 0; }
+    .letter-header img { display: block; width: 100%; height: auto; }
+
+    .letter-content {
+      position: relative;
+      padding: 10mm 18mm 32mm;
+      overflow: hidden;
+    }
+
+    .date-line {
+      margin: 0 0 10px;
+      text-align: right;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .letter-body p {
+      margin: 8px 0;
+      color: #222;
+      font-size: 12.4px;
+      line-height: 1.45;
+      text-align: left;
+      overflow-wrap: anywhere;
+    }
+
+    .signature-block { margin-top: 22px; position: relative; }
+    .signature-block p { margin: 3px 0; position: relative; z-index: 1; }
+    .stamp-area { height: 22mm; position: relative; }
+    .stamp-signature {
+      position: absolute;
+      top: -18mm;
+      left: 0mm; /* Align stamp left edge with company/signatory text */
+      z-index: 0;
+      display: block;
+      width: 55mm;
+      height: auto;
+      pointer-events: none;
+    }
+
+    .letter-footer {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      line-height: 0;
+    }
+    .letter-footer img { display: block; width: 100%; height: auto; }
+
+    @media print {
+      body { margin: 0; padding: 0; background: #fff; }
+      .form-box, .container > h2, .btn-row { display: none !important; }
+      #letter { display: block !important; margin: 0; }
+    }
+
+    @media screen and (max-width: 850px) {
+      body { padding: 10px; }
+      #letter { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>OSL Automotives — Credit Request Letter Generator</h2>
+
+    <div class="form-box">
+      <form id="letterForm">
+        <label for="letterDate">Letter Date:</label>
+        <input type="date" id="letterDate" required />
+
+        <label for="amountLakh">Credit Amount (in Lakh):</label>
+        <input type="text" id="amountLakh" value="350" required />
+
+        <label>LOB (select one or more):</label>
+        <div class="lob-options">
+          <label><input type="checkbox" class="lobCheck" value="SCV C &amp; PU" /> SCV C &amp; PU</label>
+          <label><input type="checkbox" class="lobCheck" value="CV Pass" /> CV Pass</label>
+          <label><input type="checkbox" class="lobCheck" value="ILMCV" /> ILMCV</label>
+          <label><input type="checkbox" class="lobCheck" value="HCV" /> HCV</label>
+        </div>
+
+        <label for="tillDate">Till Date:</label>
+        <input type="date" id="tillDate" required />
+
+        <label for="payerCode">Payer Code:</label>
+        <input type="text" id="payerCode" value="11E2140" required />
+
+        <label for="chequeNo">Cheque No:</label>
+        <input type="text" id="chequeNo" value="100491" required />
+
+        <label for="managerName">Manager / Authorized Person Name:</label>
+        <input type="text" id="managerName" value="Susovan Saha" required />
+
+        <div class="btn-row">
+          <button type="button" id="previewBtn">Submit / Preview</button>
+          <button type="button" class="pdf-btn" id="pdfBtn">Generate PDF</button>
+        </div>
+        <div id="statusMsg" class="status-msg" role="status" aria-live="polite"></div>
+      </form>
+    </div>
+
+    <div id="letter" aria-label="Credit request letter">
+      <div class="letter-header">
+        <!-- Keep header.png in the same folder as index.html. -->
+        <img src="header.png" alt="OSL Automotives Letterhead" />
+      </div>
+
+      <div class="letter-content">
+        <div class="date-line">Date:- <span id="p_letterDate"></span></div>
+
+        <div class="letter-body">
+          <p>To,<br />
+            The Regional Manager/RCFI<br />
+            Tata Motors Limited<br />
+            Region: - EAST
+          </p>
+
+          <p><b>Sub:- Credit request for Rs. <span id="p_amountLakh"></span> Lakh for purchase of
+            <span id="p_lob"></span> till <span id="p_tillDate1"></span></b>
+          </p>
+
+          <p>I/We hereby request Tata Motors Limited (TML) to allow credit billing in TML under
+            <b><u><span id="p_payerCode"></span></u></b> Payer code for commercial vehicles.</p>
+
+          <p>I/We also confirm that we will repay the credit utilization amount within
+            <span id="p_tillDate2"></span></p>
+
+          <p>Further, I/We hereby authorize TML to swap the invoices against our Inventory funding limits
+            (Channel finance) if available/reinstated on/before the above credit period.</p>
+
+          <p>Further, in case of non-payment of the said amount on due date, TML can deposit our
+            cheque no : <b><span id="p_chequeNo"></span></b> Date ____________ for Rs. ____________
+            and liability for bouncing the cheque, if any, will be on our part.</p>
+
+          <p>I/We also agree to pay interest <b>@ 11% p.a</b> on this credit amount utilized from
+            invoice date to the date of full clearance of the dues.</p>
+
+          <div class="signature-block">
+            <p>Thanks &amp; Regards</p>
+            <p>For, OSL Automotives Pvt. Ltd.</p>
+            <div class="stamp-area" aria-label="Authorized stamp and signature area">
+              <img class="stamp-signature" src="stamp_signature.png" alt="Authorized company stamp and signature" />
+            </div>
+            <p>(<span id="p_managerName"></span>)</p>
+            <p>Manager Accounts</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="letter-footer">
+        <!-- Keep footer.png in the same folder as index.html. -->
+        <img src="footer.png" alt="OSL Automotives Footer" />
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Keep this URL if your current Google Apps Script endpoint is still in use.
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyH1HXkwa0SFGE_yZmOiNcJu3HqaEqRklQinOETeEaOcXz8ehrzciMIT70xL4HsHfZFzw/exec";
+
+    const byId = (id) => document.getElementById(id);
+
+    function formatOrdinalDate(dateStr) {
+      if (!dateStr) return "";
+      // Parse date-only input in local time to avoid timezone day shifts.
+      const parts = dateStr.split("-").map(Number);
+      if (parts.length !== 3 || parts.some(Number.isNaN)) return "";
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      const day = d.getDate();
+      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const suffix = (n) => {
+        const lastTwo = n % 100;
+        if (lastTwo >= 11 && lastTwo <= 13) return `${n}th`;
+        switch (n % 10) {
+          case 1: return `${n}st`;
+          case 2: return `${n}nd`;
+          case 3: return `${n}rd`;
+          default: return `${n}th`;
+        }
+      };
+      return `${suffix(day)}-${months[d.getMonth()]}-${d.getFullYear()}`;
+    }
+
+    function getFormData() {
+      const checkedLobs = Array.from(document.querySelectorAll(".lobCheck:checked"))
+        .map((checkbox) => checkbox.value);
+
+      return {
+        letterDate: formatOrdinalDate(byId("letterDate").value),
+        amountLakh: byId("amountLakh").value.trim(),
+        lob: checkedLobs.join(" & "),
+        tillDate: formatOrdinalDate(byId("tillDate").value),
+        payerCode: byId("payerCode").value.trim(),
+        chequeNo: byId("chequeNo").value.trim(),
+        managerName: byId("managerName").value.trim()
+      };
+    }
+
+    function fillLetter() {
+      const data = getFormData();
+      byId("p_letterDate").textContent = data.letterDate;
+      byId("p_amountLakh").textContent = data.amountLakh;
+      byId("p_lob").textContent = data.lob || "__________";
+      byId("p_tillDate1").textContent = data.tillDate;
+      byId("p_tillDate2").textContent = data.tillDate;
+      byId("p_payerCode").textContent = data.payerCode;
+      byId("p_chequeNo").textContent = data.chequeNo;
+      byId("p_managerName").textContent = data.managerName;
+      return data;
+    }
+
+    function setStatus(message, type) {
+      const status = byId("statusMsg");
+      status.className = `status-msg ${type || ""}`.trim();
+      status.textContent = message;
+    }
+
+    function validateForm() {
+      const form = byId("letterForm");
+      if (!form.reportValidity()) return false;
+      if (!document.querySelector(".lobCheck:checked")) {
+        setStatus("Please select at least one LOB.", "error");
+        return false;
+      }
+      return true;
+    }
+
+    function previewLetter() {
+      if (!validateForm()) return;
+      fillLetter();
+      byId("letter").style.display = "block";
+      byId("letter").scrollIntoView({ behavior: "smooth", block: "start" });
+      setStatus("Preview ready.", "success");
+    }
+
+    function sendDataToGoogleSheet(data) {
+      if (!GOOGLE_SCRIPT_URL) return;
+      // no-cors responses cannot confirm that the spreadsheet actually stored the row.
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(data)
+      }).catch((error) => console.error("Google Sheets request failed:", error));
+    }
+
+    function waitForImage(img) {
+      return new Promise((resolve, reject) => {
+        if (img.complete) {
+          if (img.naturalWidth > 0 && img.naturalHeight > 0) resolve();
+          else reject(new Error(`${img.getAttribute("src")} could not be loaded. Keep header.png, footer.png, and stamp_signature.png beside index.html and check the file names.`));
+          return;
+        }
+        img.addEventListener("load", () => {
+          if (img.naturalWidth > 0 && img.naturalHeight > 0) resolve();
+          else reject(new Error(`${img.getAttribute("src")} loaded without usable dimensions.`));
+        }, { once: true });
+        img.addEventListener("error", () => {
+          reject(new Error(`${img.getAttribute("src")} could not be loaded. Keep header.png, footer.png, and stamp_signature.png beside index.html and check the file names.`));
+        }, { once: true });
+      });
+    }
+
+    function addPdfParagraph(pdf, text, options = {}) {
+      const x = options.x ?? 14;
+      const y = options.y ?? 50;
+      const maxWidth = options.maxWidth ?? 182;
+      const fontSize = options.fontSize ?? 10;
+      const bold = options.bold ?? false;
+      const gapAfter = options.gapAfter ?? 3.2;
+      const lineHeight = fontSize * 25.4 / 72 * 1.28;
+
+      pdf.setFont("helvetica", bold ? "bold" : "normal");
+      pdf.setFontSize(fontSize);
+      const lines = [];
+      String(text).split("\n").forEach((paragraphLine) => {
+        if (!paragraphLine) {
+          lines.push("");
+        } else {
+          lines.push(...pdf.splitTextToSize(paragraphLine, maxWidth));
+        }
+      });
+
+      lines.forEach((line, index) => {
+        if (line) pdf.text(line, x, y + index * lineHeight);
+      });
+      return y + Math.max(lines.length, 1) * lineHeight + gapAfter;
+    }
+
+    // Print a paragraph with mixed font weights (used to bold only the cheque number).
+    function addRichTextParagraph(pdf, runs, options = {}) {
+      const x = options.x ?? 14;
+      const y = options.y ?? 50;
+      const maxWidth = options.maxWidth ?? 182;
+      const fontSize = options.fontSize ?? 10;
+      const gapAfter = options.gapAfter ?? 3.2;
+      const lineHeight = fontSize * 25.4 / 72 * 1.28;
+      const lines = [];
+      let currentLine = [];
+      let currentWidth = 0;
+
+      runs.forEach((run) => {
+        const isBold = Boolean(run.bold);
+        const tokens = String(run.text ?? "").split(/(\s+)/).filter(Boolean);
+        tokens.forEach((token) => {
+          pdf.setFont("helvetica", isBold ? "bold" : "normal");
+          pdf.setFontSize(fontSize);
+          const width = pdf.getTextWidth(token);
+          const isWhitespace = /^\s+$/.test(token);
+          if (!isWhitespace && currentLine.length && currentWidth + width > maxWidth) {
+            lines.push(currentLine);
+            currentLine = [];
+            currentWidth = 0;
+          }
+          currentLine.push({ text: token, bold: isBold, width });
+          currentWidth += width;
+        });
+      });
+      if (currentLine.length) lines.push(currentLine);
+
+      lines.forEach((line, lineIndex) => {
+        let cursorX = x;
+        line.forEach((part) => {
+          pdf.setFont("helvetica", part.bold ? "bold" : "normal");
+          pdf.setFontSize(fontSize);
+          pdf.text(part.text, cursorX, y + lineIndex * lineHeight);
+          cursorX += part.width;
+        });
+      });
+
+      return y + Math.max(lines.length, 1) * lineHeight + gapAfter;
+    }
+
+    function addLetterheadImage(pdf, img, y, maxHeight) {
+      if (!img || !img.naturalWidth || !img.naturalHeight) {
+        throw new Error("Header/Footer image was not loaded. Check header.png and footer.png.");
+      }
+      const pageWidth = 210;
+      const scale = Math.min(pageWidth / img.naturalWidth, maxHeight / img.naturalHeight);
+      const width = img.naturalWidth * scale;
+      const height = img.naturalHeight * scale;
+      const x = (pageWidth - width) / 2;
+      pdf.addImage(img, "PNG", x, y, width, height, undefined, "FAST");
+      return { x, y, width, height };
+    }
+
+    async function downloadPDFSinglePage() {
+      const button = byId("pdfBtn");
+      if (!validateForm()) return;
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        setStatus("PDF library did not load. Check your internet connection and reload the page.", "error");
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = "Generating PDF...";
+      setStatus("Generating a clear, single-page A4 PDF...", "loading");
+
+      // The PDF uses the preview's rendered layout to place the stamp in the same
+      // relative position, even when the user generates PDF before opening Preview.
+      const letterElement = byId("letter");
+      const originalInlineDisplay = letterElement.style.display;
+      const wasHidden = getComputedStyle(letterElement).display === "none";
+      if (wasHidden) letterElement.style.display = "block";
+
+      try {
+        const data = fillLetter();
+        sendDataToGoogleSheet(data);
+
+        const headerImg = document.querySelector(".letter-header img");
+        const footerImg = document.querySelector(".letter-footer img");
+        const stampImg = document.querySelector(".stamp-signature");
+        await Promise.all([
+          waitForImage(headerImg),
+          waitForImage(footerImg),
+          waitForImage(stampImg)
+        ]);
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+          orientation: "portrait",
+          unit: "mm",
+          format: "a4",
+          compress: true
+        });
+        pdf.setProperties({
+          title: `OSL Credit Request - ${data.letterDate || "Letter"}`,
+          subject: "Credit request letter",
+          author: "OSL Automotives Pvt. Ltd."
+        });
+
+        // Place the existing letterhead images at their natural aspect ratio.
+        // No full-page screenshot is stretched to fit the PDF.
+        addLetterheadImage(pdf, headerImg, 0, 34);
+        const footer = addLetterheadImage(pdf, footerImg, 297 - 30, 30);
+        const left = 14;
+        const right = 14;
+        const contentWidth = 210 - left - right;
+
+        pdf.setTextColor(25, 25, 25);
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(9.5);
+        pdf.text(`Date:- ${data.letterDate || ""}`, 210 - right, 39.5, { align: "right" });
+
+        let y = 48.5;
+        y = addPdfParagraph(pdf,
+          "To,\nThe Regional Manager/RCFI\nTata Motors Limited\nRegion: - EAST",
+          { x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 5.2 }
+        );
+
+        const subject = `Sub:- Credit request for Rs. ${data.amountLakh} Lakh for purchase of ${data.lob || "__________"} till ${data.tillDate}`;
+        y = addPdfParagraph(pdf, subject, {
+          x: left, y, maxWidth: contentWidth, fontSize: 10, bold: true, gapAfter: 3.2
+        });
+
+        y = addPdfParagraph(pdf,
+          `I/We hereby request Tata Motors Limited (TML) to allow credit billing in TML under ${data.payerCode} Payer code for commercial vehicles.`,
+          { x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 3.8 }
+        );
+        y = addPdfParagraph(pdf,
+          `I/We also confirm that we will repay the credit utilization amount within ${data.tillDate}.`,
+          { x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 3.8 }
+        );
+        y = addPdfParagraph(pdf,
+          "Further, I/We hereby authorize TML to swap the invoices against our Inventory funding limits (Channel finance) if available/reinstated on/before the above credit period.",
+          { x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 3.8 }
+        );
+        y = addRichTextParagraph(pdf, [
+          { text: "Further, in case of non-payment of the said amount on due date, TML can deposit our cheque no : " },
+          { text: data.chequeNo, bold: true },
+          { text: " Date ____________ for Rs. ____________ and liability for bouncing the cheque, if any, will be on our part." }
+        ], { x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 3.8 });
+        y = addPdfParagraph(pdf,
+          "I/We also agree to pay interest @ 11% p.a on this credit amount utilized from invoice date to the date of full clearance of the dues.",
+          { x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 6.0 }
+        );
+
+        // Keep the PDF sign-off layout consistent with the browser preview.
+        // In the preview, the stamp is absolutely positioned over the sign-off area
+        // while the text is painted above it. Reproduce that ordering in the PDF:
+        // add the PNG first, then draw the four text lines over/around it.
+        const thanksY = y;
+        const signoffLineHeight = 10 * 25.4 / 72 * 1.28;
+        const companyY = thanksY + signoffLineHeight + 1.0;
+
+        const signatureBlock = document.querySelector(".signature-block");
+        const signoffParagraphs = signatureBlock.querySelectorAll(":scope > p");
+        const companyElement = signoffParagraphs[1];
+        const managerNameElement = signoffParagraphs[2];
+        const managerRoleElement = signoffParagraphs[3];
+        const letterRect = letterElement.getBoundingClientRect();
+        const companyRect = companyElement.getBoundingClientRect();
+        const stampRect = stampImg.getBoundingClientRect();
+        if (!letterRect.width || !companyRect.height || !stampRect.width) {
+          throw new Error("Could not measure stamp placement. Please click Submit / Preview and try again.");
+        }
+
+        // Convert the preview's CSS-pixel offsets into millimetres on the A4 page.
+        const mmPerCssPixel = 210 / letterRect.width;
+        const css = getComputedStyle(companyElement);
+        const cssFontSize = parseFloat(css.fontSize) || 12.4;
+        const cssLineHeight = parseFloat(css.lineHeight) || cssFontSize * 1.45;
+        // Approximate the text baseline within its CSS line box; it cancels for
+        // the manager lines but is needed to map the stamp's top edge accurately.
+        const baselineOffsetPx = (cssLineHeight - cssFontSize) / 2 + cssFontSize * 0.8;
+        const stampWidth = stampRect.width * mmPerCssPixel;
+        const stampHeight = stampWidth * stampImg.naturalHeight / stampImg.naturalWidth;
+        const stampX = left; // Align with the PDF sign-off text's left edge
+        const stampY = companyY +
+          (stampRect.top - companyRect.top - baselineOffsetPx) * mmPerCssPixel;
+
+        // Transparent stamp goes down first so the company/signatory text remains clear.
+        pdf.addImage(stampImg, "PNG", stampX, stampY, stampWidth, stampHeight, undefined, "FAST");
+
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(10);
+        pdf.text("Thanks & Regards", left, thanksY);
+        pdf.text("For, OSL Automotives Pvt. Ltd.", left, companyY);
+
+        const managerNameY = companyY +
+          (managerNameElement.getBoundingClientRect().top - companyRect.top) * mmPerCssPixel;
+        const managerRoleY = companyY +
+          (managerRoleElement.getBoundingClientRect().top - companyRect.top) * mmPerCssPixel;
+        pdf.text(`(${data.managerName})`, left, managerNameY);
+        pdf.text("Manager Accounts", left, managerRoleY);
+        y = managerRoleY + signoffLineHeight;
+
+        // Protect the footer: fail clearly rather than overlap it if a field is unexpectedly long.
+        const footerTop = 297 - footer.height;
+        if (y > footerTop - 5) {
+          throw new Error("Letter text is too long to fit safely above the footer. Please shorten the entered text.");
+        }
+
+        const fileDate = (byId("letterDate").value || "Letter").replace(/[^0-9-]/g, "");
+        const fileName = `OSL_Credit_Request_${fileDate || "Letter"}.pdf`;
+        pdf.save(fileName);
+        setStatus("PDF ready: single A4 page, clear text, and correctly proportioned header/footer.", "success");
+      } catch (error) {
+        console.error("PDF generation failed:", error);
+        setStatus(`PDF তৈরি করা যায়নি: ${error.message}`, "error");
+      } finally {
+        if (wasHidden) letterElement.style.display = originalInlineDisplay;
+        button.disabled = false;
+        button.textContent = "Generate PDF";
+      }
+    }
+
+    byId("previewBtn").addEventListener("click", previewLetter);
+    byId("pdfBtn").addEventListener("click", downloadPDFSinglePage);
+  </script>
+</body>
+</html>
