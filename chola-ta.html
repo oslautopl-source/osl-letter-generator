@@ -44,17 +44,25 @@
     .para3 { top: 153mm; }
     .thankyou { position: absolute; left: 10mm; top: 166mm; font: 10pt Arial, Helvetica, sans-serif; }
     .faithfully { position: absolute; left: 10mm; top: 175mm; font: 10pt Arial, Helvetica, sans-serif; }
-    .company-sign { position: absolute; z-index: 2; left: 10mm; top: 184mm; font: bold 10pt Arial, Helvetica, sans-serif; }
-    .stamp { position: absolute; z-index: 1; left: 18mm; top: 180mm; width: 40mm; height: auto; pointer-events: none; }
-    .director-name { position: absolute; z-index: 2; left: 10mm; top: 201mm; font: 10pt Arial, Helvetica, sans-serif; }
-    .director-title { position: absolute; z-index: 2; left: 10mm; top: 206.3mm; font: 10pt Arial, Helvetica, sans-serif; }
+    /* This asset includes the company authorization text, handwritten signature and Director label.
+       Position it as a single image; do not add a round company seal on the Chola TA letter. */
+    .director-signature { position: absolute; z-index: 1; left: 3mm; top: 178mm; width: 40mm; height: auto; pointer-events: none; }
+    .director-name { position: absolute; z-index: 2; left: 10mm; top: 209mm; font: 10pt Arial, Helvetica, sans-serif; }
     .bank-heading { position: absolute; left: 10mm; top: 215mm; font: 9.2pt 'Times New Roman', Times, serif; }
     .bank-table { position: absolute; left: 10mm; top: 218.2mm; width: 190mm; border-collapse: collapse; table-layout: fixed; font: 7.2pt/1.1 'Times New Roman', Times, serif; color: #111; }
-    .bank-table td { border: .25mm solid #333; padding: 1mm 1.2mm; height: 5.2mm; vertical-align: middle; overflow-wrap: anywhere; }
-    .bank-table td.label { width: 17%; }
+    .bank-table td { border: .25mm solid #333; padding: .8mm 1.1mm; height: 5.2mm; vertical-align: middle; overflow-wrap: normal; }
+    .bank-table td.label { white-space: nowrap; }
     .bank-table td.value { font-weight: bold; }
     .bank-table .beneficiary { font-weight: bold; font-size: 8pt; }
-    .bank-table .ifsc-row td { font-size: 6.8pt; }
+    .bank-table td.digit-cell, .bank-table td.ifsc-cell { padding: 0; }
+    .digit-grid { display: grid; width: 100%; height: 5.2mm; align-items: stretch; }
+    .branch-digits { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+    .account-digits { grid-template-columns: repeat(15, minmax(0, 1fr)); }
+    .digit-grid span { display: flex; align-items: center; justify-content: center; min-width: 0; border-right: .25mm solid #333; font: 7.1pt/1 'Times New Roman', Times, serif; white-space: nowrap; }
+    .digit-grid span:last-child { border-right: 0; }
+    .ifsc-grid { display: grid; grid-template-columns: 22% 22.8% 22.2% 32.999%; min-height: 5.8mm; height: 100%; }
+    .ifsc-grid span { display: flex; align-items: center; justify-content: center; min-width: 0; padding: .5mm .3mm; text-align: center; border-right: .25mm solid #333; font: bold 6.7pt/1.05 'Times New Roman', Times, serif; }
+    .ifsc-grid span:last-child { border-right: 0; }
     @media (max-width: 700px) { body { padding: 12px; } .form-box { padding: 16px; } .form-grid { grid-template-columns: 1fr; } .span-2 { grid-column: auto; } #letter { margin-left: 0; margin-right: 0; } }
     @media print { body { padding: 0; background: #fff; } .topbar, .form-box, .preview-heading { display: none !important; } #letter { display: block !important; margin: 0; box-shadow: none; } }
   </style>
@@ -101,22 +109,20 @@
         <div class="body-text para3">You Kind consideration is highly solicited and oblige.</div>
         <div class="thankyou">Thanking You,</div>
         <div class="faithfully">Yours faithfully,</div>
-        <img class="stamp" src="stamp_signature.png" alt="Authorized company stamp and signature">
-        <div class="company-sign">For OSL Automotives Pvt Ltd</div>
+        <img class="director-signature" src="Director%20Signature.png" alt="Director signature and company authorization; no round company stamp">
         <div class="director-name">(Pawan Kumar Goyal)</div>
-        <div class="director-title">Director</div>
         <div class="bank-heading"><strong>Dealer Bank Details:</strong></div>
         <table class="bank-table" aria-label="Dealer bank details">
-          <colgroup><col style="width:17%"><col style="width:31%"><col style="width:18%"><col style="width:34%"></colgroup>
+          <colgroup><col style="width:18%"><col style="width:31%"><col style="width:25.5%"><col style="width:25.5%"></colgroup>
           <tbody>
             <tr><td class="label">Beneficiary Name</td><td colspan="3" class="beneficiary">OSL AUTOMOTIVES PVT. LTD.</td></tr>
             <tr><td class="label">Bank Name</td><td class="value">AXIS BANK LTD.</td><td class="label">Branch Name</td><td class="value">SILIGURI</td></tr>
             <tr><td class="label">Branch Place</td><td>Spectrum House, Sevoke Road,</td><td class="label">Branch City</td><td>SILIGURI</td></tr>
-            <tr><td class="label">PIN Code</td><td>734001</td><td class="label">Branch Code</td><td>0 3 5</td></tr>
+            <tr><td class="label">PIN Code</td><td>734001</td><td class="label">Branch Code</td><td class="digit-cell"><div class="digit-grid branch-digits" aria-label="Branch code 035"><span></span><span>0</span><span>3</span><span>5</span><span></span><span></span><span></span><span></span></div></td></tr>
             <tr><td class="label">MICR No.</td><td colspan="3">734211002</td></tr>
             <tr><td class="label">Account Type</td><td colspan="3">Cash Credit</td></tr>
-            <tr><td class="label">Account No.</td><td colspan="3">(as appearing in the Cheque book) &nbsp; 0 3 5 0 1 0 3 0 0 0 0 4 0 8 4</td></tr>
-            <tr class="ifsc-row"><td class="label">IFSC CODE</td><td class="value">For RTGS transfer<br>UTIB0000035</td><td class="value">For NEFT transfer</td><td class="value">UTIB0000035</td></tr>
+            <tr><td class="label">Account No.</td><td>(as appearing in the Cheque book)</td><td colspan="2" class="digit-cell"><div class="digit-grid account-digits" aria-label="Account number"><span>0</span><span>3</span><span>5</span><span>0</span><span>1</span><span>0</span><span>3</span><span>0</span><span>0</span><span>0</span><span>0</span><span>4</span><span>0</span><span>8</span><span>4</span></div></td></tr>
+            <tr class="ifsc-row"><td class="label">IFSC CODE</td><td colspan="3" class="ifsc-cell"><div class="ifsc-grid"><span>For RTGS transfer</span><span>UTIB0000035</span><span>For NEFT transfer</span><span>UTIB0000035</span></div></td></tr>
           </tbody>
         </table>
         <div class="letter-footer"><img src="footer.png" alt="OSL Automotives footer"></div>
@@ -270,34 +276,70 @@
 
     function drawTable(pdf, startY) {
       const left = 10;
-      const widths = [32, 59, 34, 65];
+      const col = [34.2, 58.9, 48.45, 48.45]; // 18%, 31%, 25.5%, 25.5% of the 190 mm table
+      const branchCode = ["", "0", "3", "5", "", "", "", ""];
+      const accountNo = ["0", "3", "5", "0", "1", "0", "3", "0", "0", "0", "0", "4", "0", "8", "4"];
+      const ifscWidths = [34.2, 34.2, 35.53, 34.58, 51.49];
+
+      function drawCell(x, y, w, h, text, options = {}) {
+        pdf.setDrawColor(45, 45, 45);
+        pdf.setLineWidth(0.22);
+        pdf.rect(x, y, w, h);
+        if (options.grid) {
+          const values = options.grid;
+          const cellW = w / values.length;
+          for (let i = 1; i < values.length; i++) pdf.line(x + i * cellW, y, x + i * cellW, y + h);
+          pdf.setFont("times", "normal");
+          pdf.setFontSize(options.size || 7.1);
+          pdf.setTextColor(20, 20, 20);
+          values.forEach((value, i) => {
+            if (value) pdf.text(value, x + i * cellW + cellW / 2, y + h / 2 + 0.9, { align: "center" });
+          });
+          return;
+        }
+        if (options.customCells) {
+          let cursor = x;
+          const sum = options.customCells.reduce((total, item) => total + item.w, 0);
+          const scale = w / sum;
+          options.customCells.forEach((item, index) => {
+            const cellW = item.w * scale;
+            if (index > 0) pdf.line(cursor, y, cursor, y + h);
+            pdf.setFont("times", "bold");
+            pdf.setFontSize(item.size || 6.7);
+            pdf.setTextColor(20, 20, 20);
+            const lines = pdf.splitTextToSize(item.text, cellW - 1.2);
+            const lineHeight = (item.size || 6.7) * 25.4 / 72 * 1.05;
+            const firstY = y + Math.max(0.7, (h - lines.length * lineHeight) / 2) + lineHeight * 0.75;
+            lines.slice(0, 2).forEach((line, lineIndex) => pdf.text(line, cursor + cellW / 2, firstY + lineIndex * lineHeight, { align: "center" }));
+            cursor += cellW;
+          });
+          return;
+        }
+        pdf.setFont("times", options.bold ? "bold" : "normal");
+        pdf.setFontSize(options.size || 7.1);
+        pdf.setTextColor(20, 20, 20);
+        const lines = pdf.splitTextToSize(String(text), w - 2.2);
+        const lineHeight = (options.size || 7.1) * 25.4 / 72 * 1.05;
+        const firstY = y + Math.max(0.8, (h - lines.length * lineHeight) / 2) + lineHeight * 0.75;
+        lines.slice(0, 2).forEach((line, i) => pdf.text(line, x + 1.1, firstY + i * lineHeight));
+      }
+
       const rows = [
-        { h: 5.2, cells: [{ text: "Beneficiary Name", w: 32 }, { text: "OSL AUTOMOTIVES PVT. LTD.", w: 158, bold: true, size: 7.8 }] },
-        { h: 5.2, cells: [{ text: "Bank Name", w: 32 }, { text: "AXIS BANK LTD.", w: 59, bold: true }, { text: "Branch Name", w: 34 }, { text: "SILIGURI", w: 65, bold: true }] },
-        { h: 5.2, cells: [{ text: "Branch Place", w: 32 }, { text: "Spectrum House, Sevoke Road,", w: 59 }, { text: "Branch City", w: 34 }, { text: "SILIGURI", w: 65 }] },
-        { h: 5.2, cells: [{ text: "PIN Code", w: 32 }, { text: "734001", w: 59 }, { text: "Branch Code", w: 34 }, { text: "0 3 5", w: 65 }] },
-        { h: 4.8, cells: [{ text: "MICR No.", w: 32 }, { text: "734211002", w: 158 }] },
-        { h: 4.8, cells: [{ text: "Account Type", w: 32 }, { text: "Cash Credit", w: 158 }] },
-        { h: 4.8, cells: [{ text: "Account No.", w: 32 }, { text: "(as appearing in the Cheque book)   0 3 5 0 1 0 3 0 0 0 0 4 0 8 4", w: 158, size: 6.8 }] },
-        { h: 6.0, cells: [{ text: "IFSC CODE", w: 32, bold: true, size: 6.8 }, { text: "For RTGS transfer   UTIB0000035", w: 59, bold: true, size: 6.5 }, { text: "For NEFT transfer", w: 34, bold: true, size: 6.2 }, { text: "UTIB0000035", w: 65, bold: true, size: 6.8 }] }
+        { h: 5.2, cells: [{ w: col[0], text: "Beneficiary Name" }, { w: col[1] + col[2] + col[3], text: "OSL AUTOMOTIVES PVT. LTD.", bold: true, size: 8 }] },
+        { h: 5.2, cells: [{ w: col[0], text: "Bank Name" }, { w: col[1], text: "AXIS BANK LTD.", bold: true }, { w: col[2], text: "Branch Name" }, { w: col[3], text: "SILIGURI", bold: true }] },
+        { h: 5.2, cells: [{ w: col[0], text: "Branch Place" }, { w: col[1], text: "Spectrum House, Sevoke Road," }, { w: col[2], text: "Branch City" }, { w: col[3], text: "SILIGURI" }] },
+        { h: 5.2, cells: [{ w: col[0], text: "PIN Code" }, { w: col[1], text: "734001" }, { w: col[2], text: "Branch Code" }, { w: col[3], grid: branchCode }] },
+        { h: 4.8, cells: [{ w: col[0], text: "MICR No." }, { w: col[1] + col[2] + col[3], text: "734211002" }] },
+        { h: 4.8, cells: [{ w: col[0], text: "Account Type" }, { w: col[1] + col[2] + col[3], text: "Cash Credit" }] },
+        { h: 5.2, cells: [{ w: col[0], text: "Account No." }, { w: col[1], text: "(as appearing in the Cheque book)", size: 6.8 }, { w: col[2] + col[3], grid: accountNo }] },
+        { h: 6.0, cells: [{ w: ifscWidths[0], text: "IFSC CODE", bold: true, size: 6.8 }, { w: 155.8, customCells: [{ w: ifscWidths[1], text: "For RTGS transfer" }, { w: ifscWidths[2], text: "UTIB0000035" }, { w: ifscWidths[3], text: "For NEFT transfer" }, { w: ifscWidths[4], text: "UTIB0000035" }] }] }
       ];
       let y = startY;
       rows.forEach((row) => {
         let x = left;
         row.cells.forEach((cell) => {
-          const w = cell.w;
-          pdf.setDrawColor(45, 45, 45);
-          pdf.setLineWidth(0.22);
-          pdf.rect(x, y, w, row.h);
-          pdf.setFont("times", cell.bold ? "bold" : "normal");
-          pdf.setFontSize(cell.size || 7.1);
-          pdf.setTextColor(20, 20, 20);
-          const lines = pdf.splitTextToSize(cell.text, w - 2.2);
-          const lineHeight = (cell.size || 7.1) * 25.4 / 72 * 1.05;
-          const totalTextH = lines.length * lineHeight;
-          const firstY = y + Math.max(1.0, (row.h - totalTextH) / 2) + lineHeight * 0.75;
-          lines.slice(0, 2).forEach((line, i) => pdf.text(line, x + 1.1, firstY + i * lineHeight));
-          x += w;
+          drawCell(x, y, cell.w, row.h, cell.text || "", cell);
+          x += cell.w;
         });
         y += row.h;
       });
@@ -318,8 +360,8 @@
         const data = fillPreview();
         const header = document.querySelector(".letter-header img");
         const footer = document.querySelector(".letter-footer img");
-        const stamp = document.querySelector(".stamp");
-        await Promise.all([waitForImage(header), waitForImage(footer), waitForImage(stamp)]);
+        const directorSignature = document.querySelector(".director-signature");
+        await Promise.all([waitForImage(header), waitForImage(footer), waitForImage(directorSignature)]);
 
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
@@ -355,16 +397,15 @@
         pdf.text("Thanking You,", 10, 169.3);
         pdf.text("Yours faithfully,", 10, 178.3);
 
-        // Use the authorized stamp/signature asset as an overlay, like the reference letter.
-        const stampWidth = 40;
-        const stampHeight = stampWidth * stamp.naturalHeight / stamp.naturalWidth;
-        pdf.addImage(stamp, "PNG", 18, 180, stampWidth, stampHeight, undefined, "FAST");
-        pdf.setFont("times", "bold");
-        pdf.setFontSize(10);
-        pdf.text("For OSL Automotives Pvt Ltd", 10, 187.3);
+        // Use the uploaded Director Signature.png asset as one signature block.
+        // It already contains the company authorization text and Director label, so do not
+        // duplicate those lines or use the round stamp_signature.png on this Chola TA letter.
+        const signatureWidth = 40;
+        const signatureHeight = signatureWidth * directorSignature.naturalHeight / directorSignature.naturalWidth;
+        pdf.addImage(directorSignature, "PNG", 3, 178, signatureWidth, signatureHeight, undefined, "FAST");
         pdf.setFont("times", "normal");
-        pdf.text("(Pawan Kumar Goyal)", 10, 202.0);
-        pdf.text("Director", 10, 207.3);
+        pdf.setFontSize(10);
+        pdf.text("(Pawan Kumar Goyal)", 10, 212.0);
 
         pdf.setFont("times", "normal");
         pdf.setFontSize(9.2);
