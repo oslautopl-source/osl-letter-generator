@@ -78,29 +78,23 @@
     .status-msg.error { color: #c8102e; }
     .status-msg.loading { color: #16215c; }
 
-    /* ======= Letter / Preview styling (A4 Fixed Single Page - NO FLEXBOX) ======= */
     #letter {
         background: #fff;
         padding: 0;
         box-shadow: 0 0 10px rgba(0,0,0,0.15);
-        display: none;           /* প্রথমে লুকানো, Submit দিলে block হবে */
+        display: none;
         position: relative;
         width: 210mm;
-        height: 297mm;           /* ঠিক A4 সাইজ ফিক্সড */
+        height: 297mm;
         margin: auto;
         box-sizing: border-box;
-        overflow: hidden;        /* বাড়তি কনটেন্ট থাকলেও ২য় পেজ তৈরি হবে না */
+        overflow: hidden;
     }
-    .letter-header {
-        width: 100%;
-    }
-    .letter-header img {
-        width: 100%;
-        display: block;
-    }
+    .letter-header { width: 100%; }
+    .letter-header img { width: 100%; display: block; }
     .letter-content {
         padding: 18px 45px 0 45px;
-        padding-bottom: 95px;     /* ফুটারের জন্য নিচে জায়গা রাখা হচ্ছে, যাতে টেক্সট ওভারল্যাপ না করে */
+        padding-bottom: 95px;
         box-sizing: border-box;
     }
     .date-line {
@@ -114,24 +108,18 @@
         line-height: 1.55;
         margin: 10px 0;
         color: #222;
-        text-align: left;        /* Justify বাদ — এতে টেক্সট স্ট্রেচড/লম্বা দেখানো বন্ধ হবে */
+        text-align: left;
     }
     .letter-body b { color: #000; }
     .signature-block { margin-top: 28px; }
-    .signature-block p {
-        margin: 3px 0;
-        text-align: left;
-    }
+    .signature-block p { margin: 3px 0; text-align: left; }
     .letter-footer {
-        position: absolute;      /* কনটেন্টের flow থেকে আলাদা, সবসময় নিচেই ফিক্সড থাকবে */
+        position: absolute;
         bottom: 0;
         left: 0;
         width: 100%;
     }
-    .letter-footer img {
-        width: 100%;
-        display: block;
-    }
+    .letter-footer img { width: 100%; display: block; }
     @media print {
         .form-box, .btn-row { display: none; }
         #letter { display: block; box-shadow: none; }
@@ -230,7 +218,6 @@
 </div>
 
 <script>
-// ⚠️ এখানে আপনার Google Apps Script Web App URL বসান ⚠️
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyH1HXkwa0SFGE_yZmOiNcJu3HqaEqRklQinOETeEaOcXz8ehrzciMIT70xL4HsHfZFzw/exec";
 
 function formatOrdinalDate(dateStr) {
@@ -241,7 +228,6 @@ function formatOrdinalDate(dateStr) {
                     "July","August","September","October","November","December"];
     const month = months[d.getMonth()];
     const year = d.getFullYear();
-
     function ordinalSuffix(n) {
         const s = ["th", "st", "nd", "rd"];
         const v = n % 100;
@@ -273,9 +259,9 @@ function getFormData() {
     };
 }
 
-function generateLetter() {
+// ===== শুধু ডেটা ফিল করে (কোনো স্ক্রল করে না) =====
+function fillLetterContent() {
     const data = getFormData();
-
     document.getElementById('p_letterDate').innerText = data.letterDate;
     document.getElementById('p_amountLakh').innerText = data.amountLakh;
     document.getElementById('p_lob').innerText         = data.lob || '__________';
@@ -284,10 +270,14 @@ function generateLetter() {
     document.getElementById('p_payerCode').innerText   = data.payerCode;
     document.getElementById('p_chequeNo').innerText    = data.chequeNo;
     document.getElementById('p_managerName').innerText = data.managerName;
+    return data;
+}
 
+// ===== Submit/Preview বাটনের জন্য (স্ক্রল সহ) =====
+function generateLetter() {
+    const data = fillLetterContent();
     document.getElementById('letter').style.display = 'block';
     document.getElementById('letter').scrollIntoView({behavior: 'smooth'});
-
     return data;
 }
 
@@ -313,13 +303,10 @@ function sendDataToGoogleSheet(data) {
     });
 }
 
-// ===== ছবিগুলো সম্পূর্ণ Load হয়েছে কিনা নিশ্চিত করার ফাংশন =====
 function waitForImages(container) {
     const imgs = container.querySelectorAll('img');
     const promises = Array.from(imgs).map(img => {
-        if (img.complete && img.naturalHeight !== 0) {
-            return Promise.resolve();
-        }
+        if (img.complete && img.naturalHeight !== 0) return Promise.resolve();
         return new Promise(resolve => {
             img.addEventListener('load', resolve);
             img.addEventListener('error', resolve);
@@ -328,33 +315,41 @@ function waitForImages(container) {
     return Promise.all(promises);
 }
 
+// ===== PDF জেনারেশন (স্ক্রল সমস্যা সম্পূর্ণ ঠিক করা হয়েছে) =====
 async function downloadPDF() {
     const pdfBtn = document.getElementById('pdfBtn');
     pdfBtn.disabled = true;
     pdfBtn.innerText = 'অপেক্ষা করুন...';
 
-    const data = generateLetter();
+    // শুধু ডেটা ফিল করা হচ্ছে, কোনো smooth-scroll animation চালু হচ্ছে না
+    const data = fillLetterContent();
 
-    if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "YOUR_WEB_APP_URL_HERE") {
+    if (GOOGLE_SCRIPT_URL) {
         sendDataToGoogleSheet(data);
     }
 
-    const fileName = 'OSL_Credit_Request_' + (data.letterDate || 'Letter') + '.pdf';
     const element = document.getElementById('letter');
     element.style.display = 'block';
 
-    // ✅ ছবিগুলো সম্পূর্ণ Load হওয়ার জন্য অপেক্ষা (গুরুত্বপূর্ণ)
-    await waitForImages(element);
-    await new Promise(resolve => setTimeout(resolve, 250));
+    // ⭐ মূল ফিক্স: পেজকে instantly একদম Top এ নিয়ে আসা হচ্ছে (কোনো animation ছাড়া)
+    window.scrollTo(0, 0);
 
-    // ⚠️ windowWidth/windowHeight override সম্পূর্ণ সরিয়ে দেওয়া হয়েছে —
-    // এটাই আগের ২-পেজ সমস্যার মূল কারণ ছিল
+    // ছবি লোড ও লেআউট স্থিতিশীল হওয়ার জন্য অপেক্ষা
+    await waitForImages(element);
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // আবার নিশ্চিত করা হচ্ছে scroll position (0,0) এ আছে
+    window.scrollTo(0, 0);
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     const opt = {
         margin:       0,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  {
             scale: 2,
-            useCORS: true
+            useCORS: true,
+            scrollX: 0,
+            scrollY: 0      // ⭐ html2canvas-এর স্ক্রল-অফসেট বাগ ঠিক করার জন্য
         },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak:    { mode: ['avoid-all'] }
@@ -366,7 +361,7 @@ async function downloadPDF() {
         if (window.showSaveFilePicker) {
             try {
                 const handle = await window.showSaveFilePicker({
-                    suggestedName: fileName,
+                    suggestedName: 'OSL_Credit_Request_' + (data.letterDate || 'Letter') + '.pdf',
                     types: [{ description: 'PDF File', accept: { 'application/pdf': ['.pdf'] } }]
                 });
                 const writable = await handle.createWritable();
@@ -386,7 +381,7 @@ async function downloadPDF() {
 
         const link = document.createElement('a');
         link.href = URL.createObjectURL(pdfBlob);
-        link.download = fileName;
+        link.download = 'OSL_Credit_Request_' + (data.letterDate || 'Letter') + '.pdf';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
