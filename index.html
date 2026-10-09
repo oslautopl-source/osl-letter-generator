@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>OSL Automotives - Credit Request Letter Generator</title>
 
-<!-- Use html2canvas + jsPDF (more control than html2pdf) -->
+<!-- More control: html2canvas + jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -55,24 +55,21 @@
   #letter{
     background:#fff;
     width:210mm;
-    height:297mm;           /* Force exact A4 */
+    height:297mm;
     margin:auto;
     position:relative;
     box-sizing:border-box;
     overflow:hidden;
-    display:none;           /* Preview only when needed */
+    display:none;
   }
 
   .letter-header img{width:100%;display:block;}
-  .letter-footer{
-    position:absolute;left:0;bottom:0;width:100%;
-  }
+  .letter-footer{position:absolute;left:0;bottom:0;width:100%;}
   .letter-footer img{width:100%;display:block;}
 
-  /* Body spacing tuned to look like your sample */
   .letter-content{
-    padding:10mm 18mm 0 18mm;     /* left/right margin like letter */
-    padding-bottom:32mm;          /* reserve space for footer image */
+    padding:10mm 18mm 0 18mm;
+    padding-bottom:32mm; /* footer space */
     box-sizing:border-box;
   }
   .date-line{
@@ -83,7 +80,7 @@
     line-height:1.45;
     margin:8px 0;
     color:#222;
-    text-align:left;              /* avoid stretched text */
+    text-align:left; /* no justify */
   }
   .signature-block{margin-top:22px;}
   .signature-block p{margin:3px 0;text-align:left;}
@@ -139,8 +136,7 @@
   <!-- Letter -->
   <div id="letter">
     <div class="letter-header">
-      <!-- crossorigin safe (works fine in GitHub Pages too) -->
-      <img src="header.png" crossorigin="anonymous" alt="OSL Automotives Letterhead">
+      <img src="header.png" alt="OSL Automotives Letterhead">
     </div>
 
     <div class="letter-content">
@@ -184,16 +180,14 @@
     </div>
 
     <div class="letter-footer">
-      <img src="footer.png" crossorigin="anonymous" alt="OSL Automotives Footer">
+      <img src="footer.png" alt="OSL Automotives Footer">
     </div>
   </div>
 </div>
 
 <script>
-/* Google Sheet Web App URL */
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyH1HXkwa0SFGE_yZmOiNcJu3HqaEqRklQinOETeEaOcXz8ehrzciMIT70xL4HsHfZFzw/exec";
 
-/* ---- Date format: 23rd-October-2026 ---- */
 function formatOrdinalDate(dateStr){
   if(!dateStr) return '';
   const d = new Date(dateStr);
@@ -209,17 +203,14 @@ function formatOrdinalDate(dateStr){
 }
 
 function getFormData(){
-  const letterDateRaw = document.getElementById('letterDate').value;
-  const tillDateRaw   = document.getElementById('tillDate').value;
-
   const checkedLobs = Array.from(document.querySelectorAll('.lobCheck:checked')).map(cb => cb.value);
   const lobText = checkedLobs.length ? checkedLobs.join(' & ') : '';
 
   return {
-    letterDate:  formatOrdinalDate(letterDateRaw),
+    letterDate:  formatOrdinalDate(document.getElementById('letterDate').value),
     amountLakh:  document.getElementById('amountLakh').value,
     lob:         lobText,
-    tillDate:    formatOrdinalDate(tillDateRaw),
+    tillDate:    formatOrdinalDate(document.getElementById('tillDate').value),
     payerCode:   document.getElementById('payerCode').value,
     chequeNo:    document.getElementById('chequeNo').value,
     managerName: document.getElementById('managerName').value
@@ -246,7 +237,6 @@ function previewLetter(){
   el.scrollIntoView({behavior:'smooth'});
 }
 
-/* ---- Google Sheet logging ---- */
 function sendDataToGoogleSheet(data){
   const statusEl = document.getElementById('statusMsg');
   statusEl.className = 'status-msg loading';
@@ -279,7 +269,7 @@ function waitForImages(container){
   }));
 }
 
-/* ---- SINGLE PAGE PDF (Guaranteed) ---- */
+/* Single page A4 PDF, no blank */
 async function downloadPDFSinglePage(){
   const btn = document.getElementById('pdfBtn');
   btn.disabled = true;
@@ -292,25 +282,25 @@ async function downloadPDFSinglePage(){
     const letter = document.getElementById('letter');
     letter.style.display = 'block';
 
-    // Create an offscreen clone to avoid scroll/viewport bugs
+    // Clone off-screen (NOT opacity 0)
     const clone = letter.cloneNode(true);
     clone.id = 'letter_clone_for_pdf';
     clone.style.display = 'block';
     clone.style.boxShadow = 'none';
     clone.style.position = 'fixed';
-    clone.style.left = '0';
+    clone.style.left = '-10000px';   // off-screen
     clone.style.top = '0';
     clone.style.margin = '0';
-    clone.style.zIndex = '-1';
-    clone.style.opacity = '0';     // invisible but renderable
+    clone.style.opacity = '1';       // IMPORTANT: must be visible for html2canvas
+    clone.style.pointerEvents = 'none';
+    clone.style.background = '#fff';
+
     document.body.appendChild(clone);
 
-    // Ensure images/fonts are loaded
     await waitForImages(clone);
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
     await new Promise(r => setTimeout(r, 150));
 
-    // Capture exactly the element (A4) — no scrolling influence
     const canvas = await html2canvas(clone, {
       scale: 2,
       backgroundColor: '#ffffff',
@@ -319,19 +309,18 @@ async function downloadPDFSinglePage(){
       scrollY: 0
     });
 
-    // Remove clone
     document.body.removeChild(clone);
 
-    // Put image into exactly 1 A4 page
+    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+    if (!imgData || imgData.length < 1000) {
+      throw new Error("Canvas capture failed (blank). Check header/footer image loading.");
+    }
+
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-
-    const imgData = canvas.toDataURL('image/jpeg', 0.98);
-    pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297); // EXACT 1 page
+    pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);  // FORCE exactly 1 page
 
     const fileName = `OSL_Credit_Request_${data.letterDate || 'Letter'}.pdf`;
-
-    // Save with file picker if available, else normal download
     const blob = pdf.output('blob');
 
     if (window.showSaveFilePicker) {
@@ -355,6 +344,7 @@ async function downloadPDFSinglePage(){
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
     }
+
   } catch(err){
     alert('PDF তৈরিতে সমস্যা: ' + err.message);
   } finally {
