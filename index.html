@@ -1,400 +1,367 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>OSL Automotives - Credit Request Letter Generator</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<style>
-    body {
-        font-family: Arial, Helvetica, sans-serif;
-        background: #f2f2f2;
-        margin: 0;
-        padding: 20px;
-    }
-    .container { max-width: 900px; margin: auto; }
-    h2 { text-align: center; color: #16215c; }
-    .form-box {
-        background: #fff;
-        padding: 25px;
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        margin-bottom: 30px;
-    }
-    .form-box label {
-        display: block;
-        margin-top: 14px;
-        font-weight: bold;
-        color: #333;
-    }
-    .form-box input[type="text"],
-    .form-box input[type="date"] {
-        width: 100%;
-        padding: 8px;
-        margin-top: 4px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        box-sizing: border-box;
-        font-size: 14px;
-    }
-    .lob-options {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-        margin-top: 8px;
-        background: #f8f8f8;
-        padding: 12px;
-        border-radius: 5px;
-        border: 1px solid #ddd;
-    }
-    .lob-options label {
-        margin: 0;
-        font-weight: normal;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        cursor: pointer;
-    }
-    .btn-row { text-align: center; margin-top: 20px; }
-    .btn-row button {
-        background: #c8102e;
-        color: #fff;
-        border: none;
-        padding: 12px 30px;
-        font-size: 16px;
-        border-radius: 5px;
-        cursor: pointer;
-        margin: 5px;
-    }
-    .btn-row button.pdf-btn { background: #16215c; }
-    .btn-row button:hover { opacity: 0.85; }
-    .btn-row button:disabled { opacity: 0.5; cursor: not-allowed; }
-    .status-msg {
-        text-align: center;
-        margin-top: 15px;
-        font-weight: bold;
-        font-size: 14px;
-    }
-    .status-msg.success { color: #1a7f1a; }
-    .status-msg.error { color: #c8102e; }
-    .status-msg.loading { color: #16215c; }
 
-    #letter {
-        background: #fff;
-        padding: 0;
-        box-shadow: 0 0 10px rgba(0,0,0,0.15);
-        display: none;
-        position: relative;
-        width: 210mm;
-        height: 297mm;
-        margin: auto;
-        box-sizing: border-box;
-        overflow: hidden;
-    }
-    .letter-header { width: 100%; }
-    .letter-header img { width: 100%; display: block; }
-    .letter-content {
-        padding: 18px 45px 0 45px;
-        padding-bottom: 95px;
-        box-sizing: border-box;
-    }
-    .date-line {
-        text-align: right;
-        font-weight: bold;
-        margin-bottom: 12px;
-        font-size: 13.5px;
-    }
-    .letter-body p {
-        font-size: 13px;
-        line-height: 1.55;
-        margin: 10px 0;
-        color: #222;
-        text-align: left;
-    }
-    .letter-body b { color: #000; }
-    .signature-block { margin-top: 28px; }
-    .signature-block p { margin: 3px 0; text-align: left; }
-    .letter-footer {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-    }
-    .letter-footer img { width: 100%; display: block; }
-    @media print {
-        .form-box, .btn-row { display: none; }
-        #letter { display: block; box-shadow: none; }
-    }
+<!-- Use html2canvas + jsPDF (more control than html2pdf) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  body{
+    font-family: Arial, Helvetica, sans-serif;
+    background:#f2f2f2;
+    margin:0;
+    padding:20px;
+  }
+  .container{max-width:900px;margin:auto;}
+  h2{text-align:center;color:#16215c;}
+
+  .form-box{
+    background:#fff;padding:25px;border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);margin-bottom:30px;
+  }
+  .form-box label{display:block;margin-top:14px;font-weight:bold;color:#333;}
+  .form-box input[type="text"], .form-box input[type="date"]{
+    width:100%;padding:8px;margin-top:4px;border:1px solid #ccc;
+    border-radius:4px;box-sizing:border-box;font-size:14px;
+  }
+
+  .lob-options{
+    display:flex;flex-wrap:wrap;gap:15px;margin-top:8px;
+    background:#f8f8f8;padding:12px;border-radius:5px;border:1px solid #ddd;
+  }
+  .lob-options label{
+    margin:0;font-weight:normal;display:flex;align-items:center;gap:5px;cursor:pointer;
+  }
+
+  .btn-row{text-align:center;margin-top:20px;}
+  .btn-row button{
+    background:#c8102e;color:#fff;border:none;padding:12px 30px;font-size:16px;
+    border-radius:5px;cursor:pointer;margin:5px;
+  }
+  .btn-row button.pdf-btn{background:#16215c;}
+  .btn-row button:hover{opacity:.85;}
+  .btn-row button:disabled{opacity:.5;cursor:not-allowed;}
+
+  .status-msg{text-align:center;margin-top:15px;font-weight:bold;font-size:14px;}
+  .status-msg.success{color:#1a7f1a;}
+  .status-msg.error{color:#c8102e;}
+  .status-msg.loading{color:#16215c;}
+
+  /* ===== Letter area (A4 fixed) ===== */
+  #letter{
+    background:#fff;
+    width:210mm;
+    height:297mm;           /* Force exact A4 */
+    margin:auto;
+    position:relative;
+    box-sizing:border-box;
+    overflow:hidden;
+    display:none;           /* Preview only when needed */
+  }
+
+  .letter-header img{width:100%;display:block;}
+  .letter-footer{
+    position:absolute;left:0;bottom:0;width:100%;
+  }
+  .letter-footer img{width:100%;display:block;}
+
+  /* Body spacing tuned to look like your sample */
+  .letter-content{
+    padding:10mm 18mm 0 18mm;     /* left/right margin like letter */
+    padding-bottom:32mm;          /* reserve space for footer image */
+    box-sizing:border-box;
+  }
+  .date-line{
+    text-align:right;font-weight:bold;margin:0 0 10px 0;font-size:13px;
+  }
+  .letter-body p{
+    font-size:12.4px;
+    line-height:1.45;
+    margin:8px 0;
+    color:#222;
+    text-align:left;              /* avoid stretched text */
+  }
+  .signature-block{margin-top:22px;}
+  .signature-block p{margin:3px 0;text-align:left;}
+
+  @media print{
+    .form-box,.btn-row{display:none;}
+    #letter{display:block;}
+  }
 </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>OSL Automotives — Credit Request Letter Generator</h2>
+  <h2>OSL Automotives — Credit Request Letter Generator</h2>
 
-    <div class="form-box">
-        <form id="letterForm">
-            <label>Letter Date:</label>
-            <input type="date" id="letterDate" required>
+  <div class="form-box">
+    <form id="letterForm">
+      <label>Letter Date:</label>
+      <input type="date" id="letterDate" required>
 
-            <label>Credit Amount (Lakh এ):</label>
-            <input type="text" id="amountLakh" value="350" required>
+      <label>Credit Amount (Lakh এ):</label>
+      <input type="text" id="amountLakh" value="350" required>
 
-            <label>LOB (একাধিক সিলেক্ট করা যাবে):</label>
-            <div class="lob-options">
-                <label><input type="checkbox" class="lobCheck" value="SCV C & PU"> SCV C & PU</label>
-                <label><input type="checkbox" class="lobCheck" value="CV Pass"> CV Pass</label>
-                <label><input type="checkbox" class="lobCheck" value="ILMCV"> ILMCV</label>
-                <label><input type="checkbox" class="lobCheck" value="HCV"> HCV</label>
-            </div>
+      <label>LOB (একাধিক সিলেক্ট করা যাবে):</label>
+      <div class="lob-options">
+        <label><input type="checkbox" class="lobCheck" value="SCV C & PU"> SCV C & PU</label>
+        <label><input type="checkbox" class="lobCheck" value="CV Pass"> CV Pass</label>
+        <label><input type="checkbox" class="lobCheck" value="ILMCV"> ILMCV</label>
+        <label><input type="checkbox" class="lobCheck" value="HCV"> HCV</label>
+      </div>
 
-            <label>Till Date:</label>
-            <input type="date" id="tillDate" required>
+      <label>Till Date:</label>
+      <input type="date" id="tillDate" required>
 
-            <label>Payer Code:</label>
-            <input type="text" id="payerCode" value="11E2140" required>
+      <label>Payer Code:</label>
+      <input type="text" id="payerCode" value="11E2140" required>
 
-            <label>Cheque No:</label>
-            <input type="text" id="chequeNo" value="100491" required>
+      <label>Cheque No:</label>
+      <input type="text" id="chequeNo" value="100491" required>
 
-            <label>Manager / Authorized Person Name:</label>
-            <input type="text" id="managerName" value="Susovan Saha" required>
+      <label>Manager / Authorized Person Name:</label>
+      <input type="text" id="managerName" value="Susovan Saha" required>
 
-            <div class="btn-row">
-                <button type="button" onclick="generateLetter()">Submit / Preview</button>
-                <button type="button" class="pdf-btn" id="pdfBtn" onclick="downloadPDF()">Generate PDF</button>
-            </div>
+      <div class="btn-row">
+        <button type="button" onclick="previewLetter()">Submit / Preview</button>
+        <button type="button" class="pdf-btn" id="pdfBtn" onclick="downloadPDFSinglePage()">Generate PDF</button>
+      </div>
 
-            <div id="statusMsg" class="status-msg"></div>
-        </form>
+      <div id="statusMsg" class="status-msg"></div>
+    </form>
+  </div>
+
+  <!-- Letter -->
+  <div id="letter">
+    <div class="letter-header">
+      <!-- crossorigin safe (works fine in GitHub Pages too) -->
+      <img src="header.png" crossorigin="anonymous" alt="OSL Automotives Letterhead">
     </div>
 
-    <div id="letter">
-        <div class="letter-header">
-            <img src="header.png" alt="OSL Automotives Letterhead">
+    <div class="letter-content">
+      <div class="date-line">Date:- <span id="p_letterDate"></span></div>
+
+      <div class="letter-body">
+        <p>To,<br>
+          The Regional Manager/RCFI<br>
+          Tata Motors Limited<br>
+          Region: - EAST
+        </p>
+
+        <p><b>Sub:- Credit request for Rs. <span id="p_amountLakh"></span> Lakh for purchase of
+          <span id="p_lob"></span> till <span id="p_tillDate1"></span></b>
+        </p>
+
+        <p>I/We hereby request Tata Motors Limited (TML) to allow credit billing in TML under
+          <b><u><span id="p_payerCode"></span></u></b> Payer code for commercial vehicles.</p>
+
+        <p>I/We also confirm that we will repay the credit utilization amount within
+          <span id="p_tillDate2"></span></p>
+
+        <p>Further, I/We hereby authorize TML to swap the invoices against our Inventory funding limits
+          (Channel finance) if available/reinstated on/before the above credit period.</p>
+
+        <p>Further, in case of non-payment of the said amount on due date, TML can deposit our
+          cheque no : <b><span id="p_chequeNo"></span></b> Date ____________ for Rs. ____________
+          and liability for bouncing the cheque, if any, will be on our part.</p>
+
+        <p>I/We also agree to pay interest <b>@ 11% p.a</b> on this credit amount utilized from
+          invoice date to the date of full clearance of the dues.</p>
+
+        <div class="signature-block">
+          <p>Thanks &amp; Regards</p>
+          <p>For, OSL Automotives Pvt. Ltd.</p>
+          <br><br>
+          <p>(<span id="p_managerName"></span>)</p>
+          <p>Manager Accounts</p>
         </div>
-
-        <div class="letter-content">
-            <div class="date-line">Date:- <span id="p_letterDate"></span></div>
-
-            <div class="letter-body">
-                <p>To,<br>
-                The Regional Manager/RCFI<br>
-                Tata Motors Limited<br>
-                Region: - EAST</p>
-
-                <p><b>Sub:- Credit request for Rs. <span id="p_amountLakh"></span> Lakh for purchase of
-                <span id="p_lob"></span> till <span id="p_tillDate1"></span></b></p>
-
-                <p>I/We hereby request Tata Motors Limited (TML) to allow credit billing in TML under
-                <b><u><span id="p_payerCode"></span></u></b> Payer code for commercial vehicles.</p>
-
-                <p>I/We also confirm that we will repay the credit utilization amount within
-                <span id="p_tillDate2"></span></p>
-
-                <p>Further, I/We hereby authorize TML to swap the invoices against our Inventory funding
-                limits (Channel finance) if available/reinstated on/before the above credit period.</p>
-
-                <p>Further, in case of non-payment of the said amount on due date, TML can deposit our
-                cheque no : <b><span id="p_chequeNo"></span></b> Date ____________ for Rs. ____________
-                and liability for bouncing the cheque, if any, will be on our part.</p>
-
-                <p>I/We also agree to pay interest <b>@ 11% p.a</b> on this credit amount utilized from
-                invoice date to the date of full clearance of the dues.</p>
-
-                <div class="signature-block">
-                    <p>Thanks &amp; Regards</p>
-                    <p>For, OSL Automotives Pvt. Ltd.</p>
-                    <br><br>
-                    <p>(<span id="p_managerName"></span>)</p>
-                    <p>Manager Accounts</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="letter-footer">
-            <img src="footer.png" alt="OSL Automotives Footer">
-        </div>
+      </div>
     </div>
+
+    <div class="letter-footer">
+      <img src="footer.png" crossorigin="anonymous" alt="OSL Automotives Footer">
+    </div>
+  </div>
 </div>
 
 <script>
+/* Google Sheet Web App URL */
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyH1HXkwa0SFGE_yZmOiNcJu3HqaEqRklQinOETeEaOcXz8ehrzciMIT70xL4HsHfZFzw/exec";
 
-function formatOrdinalDate(dateStr) {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    const day = d.getDate();
-    const months = ["January","February","March","April","May","June",
-                    "July","August","September","October","November","December"];
-    const month = months[d.getMonth()];
-    const year = d.getFullYear();
-    function ordinalSuffix(n) {
-        const s = ["th", "st", "nd", "rd"];
-        const v = n % 100;
-        return n + (s[(v - 20) % 10] || s[v] || s[0]);
-    }
-    return `${ordinalSuffix(day)}-${month}-${year}`;
+/* ---- Date format: 23rd-October-2026 ---- */
+function formatOrdinalDate(dateStr){
+  if(!dateStr) return '';
+  const d = new Date(dateStr);
+  const day = d.getDate();
+  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const month = months[d.getMonth()];
+  const year = d.getFullYear();
+  function suffix(n){
+    const s=["th","st","nd","rd"], v=n%100;
+    return n+(s[(v-20)%10]||s[v]||s[0]);
+  }
+  return `${suffix(day)}-${month}-${year}`;
 }
 
-function getFormData() {
-    const letterDateRaw = document.getElementById('letterDate').value;
-    const tillDateRaw   = document.getElementById('tillDate').value;
-    const amountLakh    = document.getElementById('amountLakh').value;
-    const payerCode     = document.getElementById('payerCode').value;
-    const chequeNo      = document.getElementById('chequeNo').value;
-    const managerName   = document.getElementById('managerName').value;
+function getFormData(){
+  const letterDateRaw = document.getElementById('letterDate').value;
+  const tillDateRaw   = document.getElementById('tillDate').value;
 
-    const checkedLobs = Array.from(document.querySelectorAll('.lobCheck:checked'))
-                              .map(cb => cb.value);
-    const lobText = checkedLobs.length ? checkedLobs.join(' & ') : '';
+  const checkedLobs = Array.from(document.querySelectorAll('.lobCheck:checked')).map(cb => cb.value);
+  const lobText = checkedLobs.length ? checkedLobs.join(' & ') : '';
 
-    return {
-        letterDate:  formatOrdinalDate(letterDateRaw),
-        amountLakh:  amountLakh,
-        lob:         lobText,
-        tillDate:    formatOrdinalDate(tillDateRaw),
-        payerCode:   payerCode,
-        chequeNo:    chequeNo,
-        managerName: managerName
-    };
+  return {
+    letterDate:  formatOrdinalDate(letterDateRaw),
+    amountLakh:  document.getElementById('amountLakh').value,
+    lob:         lobText,
+    tillDate:    formatOrdinalDate(tillDateRaw),
+    payerCode:   document.getElementById('payerCode').value,
+    chequeNo:    document.getElementById('chequeNo').value,
+    managerName: document.getElementById('managerName').value
+  };
 }
 
-// ===== শুধু ডেটা ফিল করে (কোনো স্ক্রল করে না) =====
-function fillLetterContent() {
-    const data = getFormData();
-    document.getElementById('p_letterDate').innerText = data.letterDate;
-    document.getElementById('p_amountLakh').innerText = data.amountLakh;
-    document.getElementById('p_lob').innerText         = data.lob || '__________';
-    document.getElementById('p_tillDate1').innerText   = data.tillDate;
-    document.getElementById('p_tillDate2').innerText   = data.tillDate;
-    document.getElementById('p_payerCode').innerText   = data.payerCode;
-    document.getElementById('p_chequeNo').innerText    = data.chequeNo;
-    document.getElementById('p_managerName').innerText = data.managerName;
-    return data;
+function fillLetter(){
+  const data = getFormData();
+  document.getElementById('p_letterDate').innerText = data.letterDate;
+  document.getElementById('p_amountLakh').innerText = data.amountLakh;
+  document.getElementById('p_lob').innerText = data.lob || '__________';
+  document.getElementById('p_tillDate1').innerText = data.tillDate;
+  document.getElementById('p_tillDate2').innerText = data.tillDate;
+  document.getElementById('p_payerCode').innerText = data.payerCode;
+  document.getElementById('p_chequeNo').innerText = data.chequeNo;
+  document.getElementById('p_managerName').innerText = data.managerName;
+  return data;
 }
 
-// ===== Submit/Preview বাটনের জন্য (স্ক্রল সহ) =====
-function generateLetter() {
-    const data = fillLetterContent();
-    document.getElementById('letter').style.display = 'block';
-    document.getElementById('letter').scrollIntoView({behavior: 'smooth'});
-    return data;
+function previewLetter(){
+  fillLetter();
+  const el = document.getElementById('letter');
+  el.style.display = 'block';
+  el.scrollIntoView({behavior:'smooth'});
 }
 
-function sendDataToGoogleSheet(data) {
-    const statusEl = document.getElementById('statusMsg');
-    statusEl.className = 'status-msg loading';
-    statusEl.innerText = '⏳ Google Sheet এ ডেটা সেভ হচ্ছে...';
+/* ---- Google Sheet logging ---- */
+function sendDataToGoogleSheet(data){
+  const statusEl = document.getElementById('statusMsg');
+  statusEl.className = 'status-msg loading';
+  statusEl.innerText = '⏳ Google Sheet এ ডেটা সেভ হচ্ছে...';
 
-    fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(data)
-    })
-    .then(() => {
-        statusEl.className = 'status-msg success';
-        statusEl.innerText = '✅ ডেটা সফলভাবে Google Sheet এ সেভ হয়েছে!';
-    })
-    .catch((err) => {
-        statusEl.className = 'status-msg error';
-        statusEl.innerText = '❌ Google Sheet এ সেভ করতে সমস্যা হয়েছে। PDF তবুও ডাউনলোড হবে।';
-        console.error(err);
+  fetch(GOOGLE_SCRIPT_URL, {
+    method:'POST',
+    mode:'no-cors',
+    headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+    body: JSON.stringify(data)
+  })
+  .then(() => {
+    statusEl.className = 'status-msg success';
+    statusEl.innerText = '✅ ডেটা Google Sheet এ সেভ হয়েছে!';
+  })
+  .catch(() => {
+    statusEl.className = 'status-msg error';
+    statusEl.innerText = '❌ Google Sheet এ সেভ হয়নি (PDF হবে)।';
+  });
+}
+
+function waitForImages(container){
+  const imgs = container.querySelectorAll('img');
+  return Promise.all(Array.from(imgs).map(img => {
+    if(img.complete && img.naturalHeight !== 0) return Promise.resolve();
+    return new Promise(res => {
+      img.onload = () => res();
+      img.onerror = () => res();
     });
+  }));
 }
 
-function waitForImages(container) {
-    const imgs = container.querySelectorAll('img');
-    const promises = Array.from(imgs).map(img => {
-        if (img.complete && img.naturalHeight !== 0) return Promise.resolve();
-        return new Promise(resolve => {
-            img.addEventListener('load', resolve);
-            img.addEventListener('error', resolve);
+/* ---- SINGLE PAGE PDF (Guaranteed) ---- */
+async function downloadPDFSinglePage(){
+  const btn = document.getElementById('pdfBtn');
+  btn.disabled = true;
+  btn.innerText = 'অপেক্ষা করুন...';
+
+  try{
+    const data = fillLetter();
+    if(GOOGLE_SCRIPT_URL) sendDataToGoogleSheet(data);
+
+    const letter = document.getElementById('letter');
+    letter.style.display = 'block';
+
+    // Create an offscreen clone to avoid scroll/viewport bugs
+    const clone = letter.cloneNode(true);
+    clone.id = 'letter_clone_for_pdf';
+    clone.style.display = 'block';
+    clone.style.boxShadow = 'none';
+    clone.style.position = 'fixed';
+    clone.style.left = '0';
+    clone.style.top = '0';
+    clone.style.margin = '0';
+    clone.style.zIndex = '-1';
+    clone.style.opacity = '0';     // invisible but renderable
+    document.body.appendChild(clone);
+
+    // Ensure images/fonts are loaded
+    await waitForImages(clone);
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    await new Promise(r => setTimeout(r, 150));
+
+    // Capture exactly the element (A4) — no scrolling influence
+    const canvas = await html2canvas(clone, {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      scrollX: 0,
+      scrollY: 0
+    });
+
+    // Remove clone
+    document.body.removeChild(clone);
+
+    // Put image into exactly 1 A4 page
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+    pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297); // EXACT 1 page
+
+    const fileName = `OSL_Credit_Request_${data.letterDate || 'Letter'}.pdf`;
+
+    // Save with file picker if available, else normal download
+    const blob = pdf.output('blob');
+
+    if (window.showSaveFilePicker) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: fileName,
+          types: [{ description:'PDF File', accept:{ 'application/pdf':['.pdf'] } }]
         });
-    });
-    return Promise.all(promises);
-}
-
-// ===== PDF জেনারেশন (স্ক্রল সমস্যা সম্পূর্ণ ঠিক করা হয়েছে) =====
-async function downloadPDF() {
-    const pdfBtn = document.getElementById('pdfBtn');
-    pdfBtn.disabled = true;
-    pdfBtn.innerText = 'অপেক্ষা করুন...';
-
-    // শুধু ডেটা ফিল করা হচ্ছে, কোনো smooth-scroll animation চালু হচ্ছে না
-    const data = fillLetterContent();
-
-    if (GOOGLE_SCRIPT_URL) {
-        sendDataToGoogleSheet(data);
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      } catch (e) {
+        if (e.name !== 'AbortError') throw e;
+      }
+    } else {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
     }
-
-    const element = document.getElementById('letter');
-    element.style.display = 'block';
-
-    // ⭐ মূল ফিক্স: পেজকে instantly একদম Top এ নিয়ে আসা হচ্ছে (কোনো animation ছাড়া)
-    window.scrollTo(0, 0);
-
-    // ছবি লোড ও লেআউট স্থিতিশীল হওয়ার জন্য অপেক্ষা
-    await waitForImages(element);
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    // আবার নিশ্চিত করা হচ্ছে scroll position (0,0) এ আছে
-    window.scrollTo(0, 0);
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    const opt = {
-        margin:       0,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  {
-            scale: 2,
-            useCORS: true,
-            scrollX: 0,
-            scrollY: 0      // ⭐ html2canvas-এর স্ক্রল-অফসেট বাগ ঠিক করার জন্য
-        },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: ['avoid-all'] }
-    };
-
-    try {
-        const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
-
-        if (window.showSaveFilePicker) {
-            try {
-                const handle = await window.showSaveFilePicker({
-                    suggestedName: 'OSL_Credit_Request_' + (data.letterDate || 'Letter') + '.pdf',
-                    types: [{ description: 'PDF File', accept: { 'application/pdf': ['.pdf'] } }]
-                });
-                const writable = await handle.createWritable();
-                await writable.write(pdfBlob);
-                await writable.close();
-                pdfBtn.disabled = false;
-                pdfBtn.innerText = 'Generate PDF';
-                return;
-            } catch (err) {
-                if (err.name === 'AbortError') {
-                    pdfBtn.disabled = false;
-                    pdfBtn.innerText = 'Generate PDF';
-                    return;
-                }
-            }
-        }
-
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(pdfBlob);
-        link.download = 'OSL_Credit_Request_' + (data.letterDate || 'Letter') + '.pdf';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-
-    } catch (err) {
-        alert('PDF তৈরিতে সমস্যা হয়েছে: ' + err.message);
-    } finally {
-        pdfBtn.disabled = false;
-        pdfBtn.innerText = 'Generate PDF';
-    }
+  } catch(err){
+    alert('PDF তৈরিতে সমস্যা: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Generate PDF';
+  }
 }
 </script>
-
 </body>
 </html>
