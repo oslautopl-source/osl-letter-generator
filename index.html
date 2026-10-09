@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OSL Automotives - Credit Request Letter Generator</title>
 
-  <!-- PDF rendering libraries -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Native-text PDF generation keeps document text crisp and undistorted. -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
@@ -359,91 +358,64 @@
       });
     }
 
+    function addPdfParagraph(pdf, text, options = {}) {
+      const x = options.x ?? 14;
+      const y = options.y ?? 50;
+      const maxWidth = options.maxWidth ?? 182;
+      const fontSize = options.fontSize ?? 8.5;
+      const bold = options.bold ?? false;
+      const gapAfter = options.gapAfter ?? 3.2;
+      const lineHeight = fontSize * 25.4 / 72 * 1.22;
+
+      pdf.setFont("helvetica", bold ? "bold" : "normal");
+      pdf.setFontSize(fontSize);
+      const lines = [];
+      String(text).split("\n").forEach((paragraphLine) => {
+        if (!paragraphLine) {
+          lines.push("");
+        } else {
+          lines.push(...pdf.splitTextToSize(paragraphLine, maxWidth));
+        }
+      });
+
+      lines.forEach((line, index) => {
+        if (line) pdf.text(line, x, y + index * lineHeight);
+      });
+      return y + Math.max(lines.length, 1) * lineHeight + gapAfter;
+    }
+
+    function addLetterheadImage(pdf, img, y, maxHeight) {
+      if (!img || !img.naturalWidth || !img.naturalHeight) {
+        throw new Error("Header/Footer image was not loaded. Check header.png and footer.png.");
+      }
+      const pageWidth = 210;
+      const scale = Math.min(pageWidth / img.naturalWidth, maxHeight / img.naturalHeight);
+      const width = img.naturalWidth * scale;
+      const height = img.naturalHeight * scale;
+      const x = (pageWidth - width) / 2;
+      pdf.addImage(img, "PNG", x, y, width, height, undefined, "FAST");
+      return { x, y, width, height };
+    }
+
     async function downloadPDFSinglePage() {
       const button = byId("pdfBtn");
       if (!validateForm()) return;
-      if (!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF) {
-        setStatus("PDF libraries did not load. Check your internet connection and reload the page.", "error");
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        setStatus("PDF library did not load. Check your internet connection and reload the page.", "error");
         return;
       }
 
       button.disabled = true;
       button.textContent = "Generating PDF...";
-      setStatus("Generating A4 PDF. Please wait...", "loading");
+      setStatus("Generating a clear, single-page A4 PDF...", "loading");
 
-      let stage = null;
       try {
         const data = fillLetter();
         sendDataToGoogleSheet(data);
 
-        const sourceLetter = byId("letter");
-        sourceLetter.style.display = "block";
-
-        // Render the clone at the top-left of the viewport; do not capture an off-screen element.
-        // It is removed immediately after capture and never changes the downloaded page dimensions.
-        stage = document.createElement("div");
-        stage.id = "pdf-render-stage";
-        Object.assign(stage.style, {
-          position: "fixed",
-          left: "0",
-          top: "0",
-          width: "210mm",
-          height: "297mm",
-          margin: "0",
-          padding: "0",
-          overflow: "hidden",
-          background: "#ffffff",
-          zIndex: "2147483647",
-          pointerEvents: "none"
-        });
-
-        const clone = sourceLetter.cloneNode(true);
-        clone.id = "letter_pdf_clone";
-        Object.assign(clone.style, {
-          display: "block",
-          position: "relative",
-          left: "0",
-          top: "0",
-          width: "210mm",
-          height: "297mm",
-          minWidth: "210mm",
-          minHeight: "297mm",
-          margin: "0",
-          boxShadow: "none",
-          opacity: "1",
-          transform: "none",
-          background: "#ffffff"
-        });
-        stage.appendChild(clone);
-        document.body.appendChild(stage);
-
-        const images = Array.from(clone.querySelectorAll("img"));
-        await Promise.all(images.map(waitForImage));
-        if (document.fonts && document.fonts.ready) await document.fonts.ready;
-        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-
-        const canvas = await window.html2canvas(clone, {
-          scale: 3,
-          backgroundColor: "#ffffff",
-          useCORS: true,
-          allowTaint: false,
-          logging: false,
-          width: clone.offsetWidth,
-          height: clone.offsetHeight,
-          windowWidth: Math.max(document.documentElement.clientWidth, clone.offsetWidth),
-          windowHeight: Math.max(window.innerHeight, clone.offsetHeight),
-          scrollX: 0,
-          scrollY: 0
-        });
-
-        if (!canvas.width || !canvas.height) {
-          throw new Error("The letter canvas is empty. Check that the letterhead images loaded correctly.");
-        }
-
-        const imageData = canvas.toDataURL("image/jpeg", 0.98);
-        if (!imageData || imageData.length < 1000) {
-          throw new Error("PDF image creation failed. The letter may be blank.");
-        }
+        const headerImg = document.querySelector(".letter-header img");
+        const footerImg = document.querySelector(".letter-footer img");
+        await Promise.all([waitForImage(headerImg), waitForImage(footerImg)]);
 
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF({
@@ -452,29 +424,84 @@
           format: "a4",
           compress: true
         });
-        // Exactly one A4 page; the complete letter canvas is scaled to the A4 page bounds.
-        pdf.addImage(imageData, "JPEG", 0, 0, 210, 297, undefined, "FAST");
+        pdf.setProperties({
+          title: `OSL Credit Request - ${data.letterDate || "Letter"}`,
+          subject: "Credit request letter",
+          author: "OSL Automotives Pvt. Ltd."
+        });
 
-        const dateForFilename = (byId("letterDate").value || "Letter").replace(/[^0-9-]/g, "");
-        const fileName = `OSL_Credit_Request_${dateForFilename || "Letter"}.pdf`;
-        const blob = pdf.output("blob");
-        const objectUrl = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = objectUrl;
-        link.download = fileName;
-        link.style.display = "none";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        // Do not revoke the object URL synchronously; some browsers need time to start the download.
-        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 2000);
+        // Place the existing letterhead images at their natural aspect ratio.
+        // No full-page screenshot is stretched to fit the PDF.
+        addLetterheadImage(pdf, headerImg, 0, 34);
+        const footer = addLetterheadImage(pdf, footerImg, 297 - 30, 30);
+        const left = 14;
+        const right = 14;
+        const contentWidth = 210 - left - right;
 
-        setStatus("PDF download started. It is formatted as one A4 page with the header and footer.", "success");
+        pdf.setTextColor(25, 25, 25);
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(8.5);
+        pdf.text(`Date:- ${data.letterDate || ""}`, 210 - right, 39.5, { align: "right" });
+
+        let y = 48.5;
+        y = addPdfParagraph(pdf,
+          "To,\nThe Regional Manager/RCFI\nTata Motors Limited\nRegion: - EAST",
+          { x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 6.2 }
+        );
+
+        const subject = `Sub:- Credit request for Rs. ${data.amountLakh} Lakh for purchase of ${data.lob || "__________"} till ${data.tillDate}`;
+        y = addPdfParagraph(pdf, subject, {
+          x: left, y, maxWidth: contentWidth, fontSize: 8.5, bold: true, gapAfter: 3.2
+        });
+
+        y = addPdfParagraph(pdf,
+          `I/We hereby request Tata Motors Limited (TML) to allow credit billing in TML under ${data.payerCode} Payer code for commercial vehicles.`,
+          { x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 3.0 }
+        );
+        y = addPdfParagraph(pdf,
+          `I/We also confirm that we will repay the credit utilization amount within ${data.tillDate}.`,
+          { x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 3.0 }
+        );
+        y = addPdfParagraph(pdf,
+          "Further, I/We hereby authorize TML to swap the invoices against our Inventory funding limits (Channel finance) if available/reinstated on/before the above credit period.",
+          { x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 3.0 }
+        );
+        y = addPdfParagraph(pdf,
+          `Further, in case of non-payment of the said amount on due date, TML can deposit our cheque no : ${data.chequeNo} Date ____________ for Rs. ____________ and liability for bouncing the cheque, if any, will be on our part.`,
+          { x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 3.0 }
+        );
+        y = addPdfParagraph(pdf,
+          "I/We also agree to pay interest @ 11% p.a on this credit amount utilized from invoice date to the date of full clearance of the dues.",
+          { x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 7.0 }
+        );
+
+        y = addPdfParagraph(pdf, "Thanks & Regards", {
+          x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 1.0
+        });
+        y = addPdfParagraph(pdf, "For, OSL Automotives Pvt. Ltd.", {
+          x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 8.3
+        });
+        y = addPdfParagraph(pdf, `(${data.managerName})`, {
+          x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 0.8
+        });
+        y = addPdfParagraph(pdf, "Manager Accounts", {
+          x: left, y, maxWidth: contentWidth, fontSize: 8.5, gapAfter: 0
+        });
+
+        // Protect the footer: fail clearly rather than overlap it if a field is unexpectedly long.
+        const footerTop = 297 - footer.height;
+        if (y > footerTop - 5) {
+          throw new Error("Letter text is too long to fit safely above the footer. Please shorten the entered text.");
+        }
+
+        const fileDate = (byId("letterDate").value || "Letter").replace(/[^0-9-]/g, "");
+        const fileName = `OSL_Credit_Request_${fileDate || "Letter"}.pdf`;
+        pdf.save(fileName);
+        setStatus("PDF ready: single A4 page, clear text, and correctly proportioned header/footer.", "success");
       } catch (error) {
         console.error("PDF generation failed:", error);
         setStatus(`PDF তৈরি করা যায়নি: ${error.message}`, "error");
       } finally {
-        if (stage && stage.parentNode) stage.parentNode.removeChild(stage);
         button.disabled = false;
         button.textContent = "Generate PDF";
       }
