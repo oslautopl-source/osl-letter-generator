@@ -466,6 +466,13 @@
       button.textContent = "Generating PDF...";
       setStatus("Generating a clear, single-page A4 PDF...", "loading");
 
+      // The PDF uses the preview's rendered layout to place the stamp in the same
+      // relative position, even when the user generates PDF before opening Preview.
+      const letterElement = byId("letter");
+      const originalInlineDisplay = letterElement.style.display;
+      const wasHidden = getComputedStyle(letterElement).display === "none";
+      if (wasHidden) letterElement.style.display = "block";
+
       try {
         const data = fillLetter();
         sendDataToGoogleSheet(data);
@@ -538,29 +545,55 @@
           { x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 6.0 }
         );
 
-        y = addPdfParagraph(pdf, "Thanks & Regards", {
-          x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 1.0
-        });
-        y = addPdfParagraph(pdf, "For, OSL Automotives Pvt. Ltd.", {
-          x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 0.8
-        });
+        // Keep the PDF sign-off layout consistent with the browser preview.
+        // In the preview, the stamp is absolutely positioned over the sign-off area
+        // while the text is painted above it. Reproduce that ordering in the PDF:
+        // add the PNG first, then draw the four text lines over/around it.
+        const thanksY = y;
+        const signoffLineHeight = 10 * 25.4 / 72 * 1.28;
+        const companyY = thanksY + signoffLineHeight + 1.0;
 
-        // Place the stamp/signature in the space BELOW the company line.
-        // Do not overlay it on "Thanks & Regards" or "For, OSL Automotives Pvt. Ltd.",
-        // because some PNG viewers/renderers can flatten semi-transparent pixels onto white.
-        const stampWidth = 43;
+        const signatureBlock = document.querySelector(".signature-block");
+        const signoffParagraphs = signatureBlock.querySelectorAll(":scope > p");
+        const companyElement = signoffParagraphs[1];
+        const managerNameElement = signoffParagraphs[2];
+        const managerRoleElement = signoffParagraphs[3];
+        const letterRect = letterElement.getBoundingClientRect();
+        const companyRect = companyElement.getBoundingClientRect();
+        const stampRect = stampImg.getBoundingClientRect();
+        if (!letterRect.width || !companyRect.height || !stampRect.width) {
+          throw new Error("Could not measure stamp placement. Please click Submit / Preview and try again.");
+        }
+
+        // Convert the preview's CSS-pixel offsets into millimetres on the A4 page.
+        const mmPerCssPixel = 210 / letterRect.width;
+        const css = getComputedStyle(companyElement);
+        const cssFontSize = parseFloat(css.fontSize) || 12.4;
+        const cssLineHeight = parseFloat(css.lineHeight) || cssFontSize * 1.45;
+        // Approximate the text baseline within its CSS line box; it cancels for
+        // the manager lines but is needed to map the stamp's top edge accurately.
+        const baselineOffsetPx = (cssLineHeight - cssFontSize) / 2 + cssFontSize * 0.8;
+        const stampWidth = stampRect.width * mmPerCssPixel;
         const stampHeight = stampWidth * stampImg.naturalHeight / stampImg.naturalWidth;
-        const stampX = left; // Align with the left edge of the company and signatory text
-        const stampY = y + 1.5;
-        pdf.addImage(stampImg, "PNG", stampX, stampY, stampWidth, stampHeight, undefined, "FAST");
-        y = stampY + stampHeight + 2.0;
+        const stampX = left; // Align with the PDF sign-off text's left edge
+        const stampY = companyY +
+          (stampRect.top - companyRect.top - baselineOffsetPx) * mmPerCssPixel;
 
-        y = addPdfParagraph(pdf, `(${data.managerName})`, {
-          x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 0.8
-        });
-        y = addPdfParagraph(pdf, "Manager Accounts", {
-          x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 0
-        });
+        // Transparent stamp goes down first so the company/signatory text remains clear.
+        pdf.addImage(stampImg, "PNG", stampX, stampY, stampWidth, stampHeight, undefined, "FAST");
+
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(10);
+        pdf.text("Thanks & Regards", left, thanksY);
+        pdf.text("For, OSL Automotives Pvt. Ltd.", left, companyY);
+
+        const managerNameY = companyY +
+          (managerNameElement.getBoundingClientRect().top - companyRect.top) * mmPerCssPixel;
+        const managerRoleY = companyY +
+          (managerRoleElement.getBoundingClientRect().top - companyRect.top) * mmPerCssPixel;
+        pdf.text(`(${data.managerName})`, left, managerNameY);
+        pdf.text("Manager Accounts", left, managerRoleY);
+        y = managerRoleY + signoffLineHeight;
 
         // Protect the footer: fail clearly rather than overlap it if a field is unexpectedly long.
         const footerTop = 297 - footer.height;
@@ -576,6 +609,7 @@
         console.error("PDF generation failed:", error);
         setStatus(`PDF তৈরি করা যায়নি: ${error.message}`, "error");
       } finally {
+        if (wasHidden) letterElement.style.display = originalInlineDisplay;
         button.disabled = false;
         button.textContent = "Generate PDF";
       }
