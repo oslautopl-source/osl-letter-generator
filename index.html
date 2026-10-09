@@ -67,6 +67,7 @@
     }
     .btn-row button.pdf-btn { background: #16215c; }
     .btn-row button:hover { opacity: 0.85; }
+    .btn-row button:disabled { opacity: 0.5; cursor: not-allowed; }
     .status-msg {
         text-align: center;
         margin-top: 15px;
@@ -77,6 +78,7 @@
     .status-msg.error { color: #c8102e; }
     .status-msg.loading { color: #16215c; }
 
+    /* ======= Letter / Preview styling (A4 Fixed Single Page) ======= */
     #letter {
         background: #fff;
         padding: 0;
@@ -84,37 +86,59 @@
         display: none;
         position: relative;
         width: 210mm;
-        min-height: 297mm;
+        height: 297mm;          /* ঠিক A4 সাইজ ফিক্সড */
         margin: auto;
         box-sizing: border-box;
+        overflow: hidden;       /* কিছু উপচে পড়লেও ২য় পেজে যাবে না */
+
+        /* Flexbox দিয়ে Header-Content-Footer সাজানো */
+        display: flex;
+        flex-direction: column;
     }
-    .letter-header img { width: 100%; display: block; }
-    .letter-content { padding: 25px 50px; }
-    .date-line { text-align: right; font-weight: bold; margin-bottom: 15px; }
-    .letter-body { text-align: justify; }
-    .letter-body p {
-        font-size: 14px;
-        line-height: 1.8;
-        margin: 16px 0;
-        color: #222;
-        text-align: justify;
-        text-justify: inter-word;
-    }
-    .letter-body p.no-justify { text-align: left; }
-    .letter-body b { color: #000; }
-    .signature-block { margin-top: 50px; }
-    .signature-block p { margin: 4px 0; text-align: left; }
-    .letter-footer {
-        position: absolute;
-        bottom: 15px;
-        left: 0;
-        right: 0;
+    .letter-header {
         width: 100%;
+        flex-shrink: 0;
     }
-    .letter-footer img { width: 100%; display: block; }
+    .letter-header img {
+        width: 100%;
+        display: block;
+    }
+    .letter-content {
+        padding: 20px 45px 10px 45px;
+        flex: 1;                /* বাকি জায়গা এটা নেবে, ফুটারকে নিচে ঠেলে দিবে */
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+    .date-line {
+        text-align: right;
+        font-weight: bold;
+        margin-bottom: 14px;
+        font-size: 14px;
+    }
+    .letter-body p {
+        font-size: 13.5px;
+        line-height: 1.65;
+        margin: 11px 0;
+        color: #222;
+        text-align: left;       /* Justify সরিয়ে Left align - stretched text সমস্যা ঠিক হবে */
+    }
+    .letter-body b { color: #000; }
+    .signature-block { margin-top: 35px; }
+    .signature-block p {
+        margin: 3px 0;
+        text-align: left;
+    }
+    .letter-footer {
+        width: 100%;
+        flex-shrink: 0;         /* ফুটার সবসময় নিচে স্থির থাকবে */
+    }
+    .letter-footer img {
+        width: 100%;
+        display: block;
+    }
     @media print {
         .form-box, .btn-row { display: none; }
-        #letter { display: block; box-shadow: none; }
+        #letter { display: flex; box-shadow: none; }
     }
 </style>
 </head>
@@ -153,7 +177,7 @@
 
             <div class="btn-row">
                 <button type="button" onclick="generateLetter()">Submit / Preview</button>
-                <button type="button" class="pdf-btn" onclick="downloadPDF()">Generate PDF</button>
+                <button type="button" class="pdf-btn" id="pdfBtn" onclick="downloadPDF()">Generate PDF</button>
             </div>
 
             <div id="statusMsg" class="status-msg"></div>
@@ -162,14 +186,14 @@
 
     <div id="letter">
         <div class="letter-header">
-            <img src="header.png" alt="OSL Automotives Letterhead">
+            <img src="header.png" alt="OSL Automotives Letterhead" id="headerImg">
         </div>
 
         <div class="letter-content">
             <div class="date-line">Date:- <span id="p_letterDate"></span></div>
 
             <div class="letter-body">
-                <p class="no-justify">To,<br>
+                <p>To,<br>
                 The Regional Manager/RCFI<br>
                 Tata Motors Limited<br>
                 Region: - EAST</p>
@@ -204,7 +228,7 @@
         </div>
 
         <div class="letter-footer">
-            <img src="footer.png" alt="OSL Automotives Footer">
+            <img src="footer.png" alt="OSL Automotives Footer" id="footerImg">
         </div>
     </div>
 </div>
@@ -265,7 +289,7 @@ function generateLetter() {
     document.getElementById('p_chequeNo').innerText    = data.chequeNo;
     document.getElementById('p_managerName').innerText = data.managerName;
 
-    document.getElementById('letter').style.display = 'block';
+    document.getElementById('letter').style.display = 'flex';
     document.getElementById('letter').scrollIntoView({behavior: 'smooth'});
 
     return data;
@@ -293,7 +317,26 @@ function sendDataToGoogleSheet(data) {
     });
 }
 
+// ===== ছবিগুলো সম্পূর্ণ Load হয়েছে কিনা নিশ্চিত করার ফাংশন =====
+function waitForImages(container) {
+    const imgs = container.querySelectorAll('img');
+    const promises = Array.from(imgs).map(img => {
+        if (img.complete && img.naturalHeight !== 0) {
+            return Promise.resolve();
+        }
+        return new Promise(resolve => {
+            img.addEventListener('load', resolve);
+            img.addEventListener('error', resolve); // error হলেও আটকে থাকবে না
+        });
+    });
+    return Promise.all(promises);
+}
+
 async function downloadPDF() {
+    const pdfBtn = document.getElementById('pdfBtn');
+    pdfBtn.disabled = true;
+    pdfBtn.innerText = 'অপেক্ষা করুন...';
+
     const data = generateLetter();
 
     if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "YOUR_WEB_APP_URL_HERE") {
@@ -301,16 +344,26 @@ async function downloadPDF() {
     }
 
     const fileName = 'OSL_Credit_Request_' + (data.letterDate || 'Letter') + '.pdf';
-
     const element = document.getElementById('letter');
-    element.style.display = 'block';
+    element.style.display = 'flex';
+
+    // ✅ ছবিগুলো সম্পূর্ণ Load হওয়ার জন্য অপেক্ষা করা হচ্ছে (২য় পেজ সমস্যা সমাধানের মূল চাবিকাঠি)
+    await waitForImages(element);
+
+    // সামান্য অতিরিক্ত অপেক্ষা (layout stabilize হওয়ার জন্য)
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     const opt = {
         margin:       0,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
+        html2canvas:  {
+            scale: 2,
+            useCORS: true,
+            windowWidth: element.scrollWidth,
+            windowHeight: element.scrollHeight
+        },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+        pagebreak:    { mode: ['avoid-all'] }
     };
 
     try {
@@ -325,9 +378,15 @@ async function downloadPDF() {
                 const writable = await handle.createWritable();
                 await writable.write(pdfBlob);
                 await writable.close();
+                pdfBtn.disabled = false;
+                pdfBtn.innerText = 'Generate PDF';
                 return;
             } catch (err) {
-                if (err.name === 'AbortError') return;
+                if (err.name === 'AbortError') {
+                    pdfBtn.disabled = false;
+                    pdfBtn.innerText = 'Generate PDF';
+                    return;
+                }
             }
         }
 
@@ -341,6 +400,9 @@ async function downloadPDF() {
 
     } catch (err) {
         alert('PDF তৈরিতে সমস্যা হয়েছে: ' + err.message);
+    } finally {
+        pdfBtn.disabled = false;
+        pdfBtn.innerText = 'Generate PDF';
     }
 }
 </script>
