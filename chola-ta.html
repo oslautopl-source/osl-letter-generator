@@ -34,21 +34,21 @@
     .letter-header img { display: block; width: 100%; height: auto; }
     .letter-footer { position: absolute; left: 0; right: 0; bottom: 0; line-height: 0; }
     .letter-footer img { display: block; width: 100%; height: auto; }
-    .date-line { position: absolute; left: 10mm; right: 10mm; top: 64mm; text-align: right; font: bold 9.5pt Arial, Helvetica, sans-serif; }
-    .recipient { position: absolute; left: 10mm; top: 64.5mm; width: 155mm; font: bold 9.4pt/1.33 'Times New Roman', Times, serif; }
-    .subject { position: absolute; left: 10mm; top: 101mm; font: bold 10pt 'Times New Roman', Times, serif; text-decoration: underline; }
-    .salutation { position: absolute; left: 10mm; top: 115.5mm; font: 10pt 'Times New Roman', Times, serif; }
-    .body-text { position: absolute; left: 10mm; right: 10mm; font: 9.5pt/1.3 Arial, Helvetica, sans-serif; }
+    .date-line { position: absolute; left: 10mm; right: 10mm; top: 64mm; text-align: right; font: bold 10pt Arial, Helvetica, sans-serif; }
+    .recipient { position: absolute; left: 10mm; top: 64.5mm; width: 155mm; font: bold 10pt/1.36 'Times New Roman', Times, serif; }
+    .subject { position: absolute; left: 10mm; top: 101mm; font: bold 10.5pt 'Times New Roman', Times, serif; text-decoration: underline; }
+    .salutation { position: absolute; left: 10mm; top: 115.5mm; font: 10.5pt 'Times New Roman', Times, serif; }
+    .body-text { position: absolute; left: 10mm; right: 10mm; font: 10pt/1.38 Arial, Helvetica, sans-serif; }
     .para1 { top: 124mm; }
     .para2 { top: 144mm; }
     .para3 { top: 153mm; }
-    .thankyou { position: absolute; left: 10mm; top: 166mm; font: 10pt Arial, Helvetica, sans-serif; }
-    .faithfully { position: absolute; left: 10mm; top: 175mm; font: 10pt Arial, Helvetica, sans-serif; }
+    .thankyou { position: absolute; left: 10mm; top: 164mm; font: 10.5pt Arial, Helvetica, sans-serif; }
+    .faithfully { position: absolute; left: 10mm; top: 172mm; font: 10.5pt Arial, Helvetica, sans-serif; }
     /* This asset includes the company authorization text, handwritten signature and Director label.
        Position it as a single image; do not add a round company seal on the Chola TA letter. */
-    .director-signature { position: absolute; z-index: 1; left: 3mm; top: 178mm; width: 40mm; height: auto; pointer-events: none; }
-    .director-name { position: absolute; z-index: 2; left: 10mm; top: 209mm; font: 10pt Arial, Helvetica, sans-serif; }
-    .bank-heading { position: absolute; left: 10mm; top: 215mm; font: 9.2pt 'Times New Roman', Times, serif; }
+    .director-signature { position: absolute; z-index: 3; left: 9.2mm; top: 168mm; width: 52mm; height: auto; pointer-events: none; }
+    .director-name { position: absolute; z-index: 2; left: 10mm; top: 207mm; font: 10.5pt Arial, Helvetica, sans-serif; }
+    .bank-heading { position: absolute; left: 10mm; top: 215mm; font: 9.5pt 'Times New Roman', Times, serif; }
     .bank-table { position: absolute; left: 10mm; top: 218.2mm; width: 190mm; border-collapse: collapse; table-layout: fixed; font: 7.2pt/1.1 'Times New Roman', Times, serif; color: #111; }
     .bank-table td { border: .25mm solid #333; padding: .8mm 1.1mm; height: 5.2mm; vertical-align: middle; overflow-wrap: normal; }
     .bank-table td.label { white-space: nowrap; }
@@ -372,43 +372,46 @@
         // Fixed coordinates mirror the browser preview; text remains selectable and crisp.
         pdf.setTextColor(20, 20, 20);
         pdf.setFont("times", "bold");
-        pdf.setFontSize(9.5);
+        pdf.setFontSize(10);
         pdf.text(`Date:  ${data.date}`, 200, 66.2, { align: "right" });
         const address = ["To,", "The Branch Manager", "Cholamandalam Investment & Finance Co.Ltd.", "Spencer Plaza, Burdwan Road, Shop No.: 18", "1st Floor, Siliguri"];
-        address.forEach((line, i) => pdf.text(line, 10, 66.5 + i * 4.25));
+        address.forEach((line, i) => pdf.text(line, 10, 66.5 + i * 4.5));
         pdf.setFont("times", "bold");
-        pdf.setFontSize(10);
+        pdf.setFontSize(10.5);
         pdf.text("Sub.: TA Request", 10, 103.8);
         pdf.setLineWidth(0.25);
         pdf.line(10, 104.2, 40, 104.2);
         pdf.setFont("times", "normal");
-        pdf.setFontSize(10);
+        pdf.setFontSize(10.5);
         pdf.text("Sir,", 10, 118.1);
 
         const body = `Arrange to Renew the Trade Advance of Rs. ${data.amountFormatted} Lakhs ( Rupees ${data.amountWords.replace(/^Rupees?\s+/i, "")} ). In favor of OSL Automotives Pvt Ltd.`;
+        pdf.setFontSize(10);
         const para1Lines = pdf.splitTextToSize(body, 190);
-        para1Lines.forEach((line, i) => pdf.text(line, 10, 127 + i * 4.2));
+        para1Lines.forEach((line, i) => pdf.text(line, 10, 127 + i * 4.5));
         pdf.setFont("times", "normal");
-        pdf.setFontSize(9.5);
+        pdf.setFontSize(10);
         pdf.text("The amount will be subsequently adjusted with the forth coming funding / Case.", 10, 147.2);
         pdf.text("You Kind consideration is highly solicited and oblige.", 10, 156.2);
         pdf.setFont("times", "normal");
-        pdf.setFontSize(10);
-        pdf.text("Thanking You,", 10, 169.3);
-        pdf.text("Yours faithfully,", 10, 178.3);
+        pdf.setFontSize(10.5);
+        pdf.text("Thanking You,", 10, 167.2);
+        pdf.text("Yours faithfully,", 10, 175.3);
 
-        // Use the uploaded Director Signature.png asset as one signature block.
-        // It already contains the company authorization text and Director label, so do not
-        // duplicate those lines or use the round stamp_signature.png on this Chola TA letter.
-        const signatureWidth = 40;
+        // Draw the printed signatory name first, then overlay the transparent signature artwork.
+        // The transparent PNG lets the underlying words remain readable, like the round stamp overlay.
+        // Do not use the round stamp_signature.png on this Chola TA letter.
+        pdf.setFont("times", "normal");
+        pdf.setFontSize(10.5);
+        pdf.text("(Pawan Kumar Goyal)", 10, 210.0);
+
+        // The cropped transparent signature image is slightly larger; keep its ink clear of the bank table.
+        const signatureWidth = 52;
         const signatureHeight = signatureWidth * directorSignature.naturalHeight / directorSignature.naturalWidth;
-        pdf.addImage(directorSignature, "PNG", 3, 178, signatureWidth, signatureHeight, undefined, "FAST");
-        pdf.setFont("times", "normal");
-        pdf.setFontSize(10);
-        pdf.text("(Pawan Kumar Goyal)", 10, 212.0);
+        pdf.addImage(directorSignature, "PNG", 9.2, 168, signatureWidth, signatureHeight, undefined, "FAST");
 
         pdf.setFont("times", "normal");
-        pdf.setFontSize(9.2);
+        pdf.setFontSize(9.5);
         pdf.text("Dealer Bank Details:", 10, 216.5);
         const tableBottom = drawTable(pdf, 218.7);
         if (tableBottom > footerPlacement.y - 2) throw new Error("Bank details table overlaps the footer. Please check the header/footer image dimensions.");
