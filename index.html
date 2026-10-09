@@ -545,14 +545,15 @@
           x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 0.8
         });
 
-        // Overlay the authorized stamp/signature across the signing area, matching the approved sample.
-        // Draw it before the signatory text so the typed name remains legible over the transparent ink.
-        const stampWidth = 55;
+        // Place the stamp/signature in the space BELOW the company line.
+        // Do not overlay it on "Thanks & Regards" or "For, OSL Automotives Pvt. Ltd.",
+        // because some PNG viewers/renderers can flatten semi-transparent pixels onto white.
+        const stampWidth = 43;
         const stampHeight = stampWidth * stampImg.naturalHeight / stampImg.naturalWidth;
-        const stampX = left; // Align with "For, OSL..." and the manager name
-        const stampY = y - 18;
+        const stampX = left; // Align with the left edge of the company and signatory text
+        const stampY = y + 1.5;
         pdf.addImage(stampImg, "PNG", stampX, stampY, stampWidth, stampHeight, undefined, "FAST");
-        y += 22;
+        y = stampY + stampHeight + 2.0;
 
         y = addPdfParagraph(pdf, `(${data.managerName})`, {
           x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 0.8
