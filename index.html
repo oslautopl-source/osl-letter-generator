@@ -78,59 +78,55 @@
     .status-msg.error { color: #c8102e; }
     .status-msg.loading { color: #16215c; }
 
-    /* ======= Letter / Preview styling (A4 Fixed Single Page) ======= */
+    /* ======= Letter / Preview styling (A4 Fixed Single Page - NO FLEXBOX) ======= */
     #letter {
         background: #fff;
         padding: 0;
         box-shadow: 0 0 10px rgba(0,0,0,0.15);
-        display: none;
+        display: none;           /* প্রথমে লুকানো, Submit দিলে block হবে */
         position: relative;
         width: 210mm;
-        height: 297mm;          /* ঠিক A4 সাইজ ফিক্সড */
+        height: 297mm;           /* ঠিক A4 সাইজ ফিক্সড */
         margin: auto;
         box-sizing: border-box;
-        overflow: hidden;       /* কিছু উপচে পড়লেও ২য় পেজে যাবে না */
-
-        /* Flexbox দিয়ে Header-Content-Footer সাজানো */
-        display: flex;
-        flex-direction: column;
+        overflow: hidden;        /* বাড়তি কনটেন্ট থাকলেও ২য় পেজ তৈরি হবে না */
     }
     .letter-header {
         width: 100%;
-        flex-shrink: 0;
     }
     .letter-header img {
         width: 100%;
         display: block;
     }
     .letter-content {
-        padding: 20px 45px 10px 45px;
-        flex: 1;                /* বাকি জায়গা এটা নেবে, ফুটারকে নিচে ঠেলে দিবে */
-        overflow: hidden;
+        padding: 18px 45px 0 45px;
+        padding-bottom: 95px;     /* ফুটারের জন্য নিচে জায়গা রাখা হচ্ছে, যাতে টেক্সট ওভারল্যাপ না করে */
         box-sizing: border-box;
     }
     .date-line {
         text-align: right;
         font-weight: bold;
-        margin-bottom: 14px;
-        font-size: 14px;
+        margin-bottom: 12px;
+        font-size: 13.5px;
     }
     .letter-body p {
-        font-size: 13.5px;
-        line-height: 1.65;
-        margin: 11px 0;
+        font-size: 13px;
+        line-height: 1.55;
+        margin: 10px 0;
         color: #222;
-        text-align: left;       /* Justify সরিয়ে Left align - stretched text সমস্যা ঠিক হবে */
+        text-align: left;        /* Justify বাদ — এতে টেক্সট স্ট্রেচড/লম্বা দেখানো বন্ধ হবে */
     }
     .letter-body b { color: #000; }
-    .signature-block { margin-top: 35px; }
+    .signature-block { margin-top: 28px; }
     .signature-block p {
         margin: 3px 0;
         text-align: left;
     }
     .letter-footer {
+        position: absolute;      /* কনটেন্টের flow থেকে আলাদা, সবসময় নিচেই ফিক্সড থাকবে */
+        bottom: 0;
+        left: 0;
         width: 100%;
-        flex-shrink: 0;         /* ফুটার সবসময় নিচে স্থির থাকবে */
     }
     .letter-footer img {
         width: 100%;
@@ -138,7 +134,7 @@
     }
     @media print {
         .form-box, .btn-row { display: none; }
-        #letter { display: flex; box-shadow: none; }
+        #letter { display: block; box-shadow: none; }
     }
 </style>
 </head>
@@ -186,7 +182,7 @@
 
     <div id="letter">
         <div class="letter-header">
-            <img src="header.png" alt="OSL Automotives Letterhead" id="headerImg">
+            <img src="header.png" alt="OSL Automotives Letterhead">
         </div>
 
         <div class="letter-content">
@@ -228,7 +224,7 @@
         </div>
 
         <div class="letter-footer">
-            <img src="footer.png" alt="OSL Automotives Footer" id="footerImg">
+            <img src="footer.png" alt="OSL Automotives Footer">
         </div>
     </div>
 </div>
@@ -289,7 +285,7 @@ function generateLetter() {
     document.getElementById('p_chequeNo').innerText    = data.chequeNo;
     document.getElementById('p_managerName').innerText = data.managerName;
 
-    document.getElementById('letter').style.display = 'flex';
+    document.getElementById('letter').style.display = 'block';
     document.getElementById('letter').scrollIntoView({behavior: 'smooth'});
 
     return data;
@@ -326,7 +322,7 @@ function waitForImages(container) {
         }
         return new Promise(resolve => {
             img.addEventListener('load', resolve);
-            img.addEventListener('error', resolve); // error হলেও আটকে থাকবে না
+            img.addEventListener('error', resolve);
         });
     });
     return Promise.all(promises);
@@ -345,22 +341,20 @@ async function downloadPDF() {
 
     const fileName = 'OSL_Credit_Request_' + (data.letterDate || 'Letter') + '.pdf';
     const element = document.getElementById('letter');
-    element.style.display = 'flex';
+    element.style.display = 'block';
 
-    // ✅ ছবিগুলো সম্পূর্ণ Load হওয়ার জন্য অপেক্ষা করা হচ্ছে (২য় পেজ সমস্যা সমাধানের মূল চাবিকাঠি)
+    // ✅ ছবিগুলো সম্পূর্ণ Load হওয়ার জন্য অপেক্ষা (গুরুত্বপূর্ণ)
     await waitForImages(element);
+    await new Promise(resolve => setTimeout(resolve, 250));
 
-    // সামান্য অতিরিক্ত অপেক্ষা (layout stabilize হওয়ার জন্য)
-    await new Promise(resolve => setTimeout(resolve, 200));
-
+    // ⚠️ windowWidth/windowHeight override সম্পূর্ণ সরিয়ে দেওয়া হয়েছে —
+    // এটাই আগের ২-পেজ সমস্যার মূল কারণ ছিল
     const opt = {
         margin:       0,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  {
             scale: 2,
-            useCORS: true,
-            windowWidth: element.scrollWidth,
-            windowHeight: element.scrollHeight
+            useCORS: true
         },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak:    { mode: ['avoid-all'] }
