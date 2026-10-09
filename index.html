@@ -384,6 +384,50 @@
       return y + Math.max(lines.length, 1) * lineHeight + gapAfter;
     }
 
+    // Print a paragraph with mixed font weights (used to bold only the cheque number).
+    function addRichTextParagraph(pdf, runs, options = {}) {
+      const x = options.x ?? 14;
+      const y = options.y ?? 50;
+      const maxWidth = options.maxWidth ?? 182;
+      const fontSize = options.fontSize ?? 10;
+      const gapAfter = options.gapAfter ?? 3.2;
+      const lineHeight = fontSize * 25.4 / 72 * 1.28;
+      const lines = [];
+      let currentLine = [];
+      let currentWidth = 0;
+
+      runs.forEach((run) => {
+        const isBold = Boolean(run.bold);
+        const tokens = String(run.text ?? "").split(/(\s+)/).filter(Boolean);
+        tokens.forEach((token) => {
+          pdf.setFont("helvetica", isBold ? "bold" : "normal");
+          pdf.setFontSize(fontSize);
+          const width = pdf.getTextWidth(token);
+          const isWhitespace = /^\s+$/.test(token);
+          if (!isWhitespace && currentLine.length && currentWidth + width > maxWidth) {
+            lines.push(currentLine);
+            currentLine = [];
+            currentWidth = 0;
+          }
+          currentLine.push({ text: token, bold: isBold, width });
+          currentWidth += width;
+        });
+      });
+      if (currentLine.length) lines.push(currentLine);
+
+      lines.forEach((line, lineIndex) => {
+        let cursorX = x;
+        line.forEach((part) => {
+          pdf.setFont("helvetica", part.bold ? "bold" : "normal");
+          pdf.setFontSize(fontSize);
+          pdf.text(part.text, cursorX, y + lineIndex * lineHeight);
+          cursorX += part.width;
+        });
+      });
+
+      return y + Math.max(lines.length, 1) * lineHeight + gapAfter;
+    }
+
     function addLetterheadImage(pdf, img, y, maxHeight) {
       if (!img || !img.naturalWidth || !img.naturalHeight) {
         throw new Error("Header/Footer image was not loaded. Check header.png and footer.png.");
@@ -466,10 +510,11 @@
           "Further, I/We hereby authorize TML to swap the invoices against our Inventory funding limits (Channel finance) if available/reinstated on/before the above credit period.",
           { x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 3.8 }
         );
-        y = addPdfParagraph(pdf,
-          `Further, in case of non-payment of the said amount on due date, TML can deposit our cheque no : ${data.chequeNo} Date ____________ for Rs. ____________ and liability for bouncing the cheque, if any, will be on our part.`,
-          { x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 3.8 }
-        );
+        y = addRichTextParagraph(pdf, [
+          { text: "Further, in case of non-payment of the said amount on due date, TML can deposit our cheque no : " },
+          { text: data.chequeNo, bold: true },
+          { text: " Date ____________ for Rs. ____________ and liability for bouncing the cheque, if any, will be on our part." }
+        ], { x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 3.8 });
         y = addPdfParagraph(pdf,
           "I/We also agree to pay interest @ 11% p.a on this credit amount utilized from invoice date to the date of full clearance of the dues.",
           { x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 6.0 }
@@ -479,8 +524,13 @@
           x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 1.0
         });
         y = addPdfParagraph(pdf, "For, OSL Automotives Pvt. Ltd.", {
-          x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 8.3
+          x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 0.8
         });
+
+        // Leave clear space for the authorized signatory to apply the approved stamp/signature.
+        // The supplied sample is not automatically embedded in an official credit letter.
+        y += 22;
+
         y = addPdfParagraph(pdf, `(${data.managerName})`, {
           x: left, y, maxWidth: contentWidth, fontSize: 10, gapAfter: 0.8
         });
