@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<title>OSL Automotives - Credit Request Letter Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f2f2f2;
+        margin: 0;
+        padding: 20px;
+    }
+    .container { max-width: 900px; margin: auto; }
+    h2 { text-align: center; color: #16215c; }
+    .form-box {
+        background: #fff;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    .form-box label {
+        display: block;
+        margin-top: 14px;
+        font-weight: bold;
+        color: #333;
+    }
+    .form-box input[type="text"],
+    .form-box input[type="date"] {
+        width: 100%;
+        padding: 8px;
+        margin-top: 4px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 14px;
+    }
+    .lob-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 8px;
+        background: #f8f8f8;
+        padding: 12px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+    }
+    .lob-options label {
+        margin: 0;
+        font-weight: normal;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+    }
+    .btn-row { text-align: center; margin-top: 20px; }
+    .btn-row button {
+        background: #c8102e;
+        color: #fff;
+        border: none;
+        padding: 12px 30px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+    }
+    .btn-row button.pdf-btn { background: #16215c; }
+    .btn-row button:hover { opacity: 0.85; }
+    .status-msg {
+        text-align: center;
+        margin-top: 15px;
+        font-weight: bold;
+        font-size: 14px;
+    }
+    .status-msg.success { color: #1a7f1a; }
+    .status-msg.error { color: #c8102e; }
+    .status-msg.loading { color: #16215c; }
+
+    #letter {
+        background: #fff;
+        padding: 0;
+        box-shadow: 0 0 10px rgba(0,0,0,0.15);
+        display: none;
+        position: relative;
+        width: 210mm;
+        min-height: 297mm;
+        margin: auto;
+        box-sizing: border-box;
+    }
+    .letter-header img { width: 100%; display: block; }
+    .letter-content { padding: 25px 50px; }
+    .date-line { text-align: right; font-weight: bold; margin-bottom: 15px; }
+    .letter-body { text-align: justify; }
+    .letter-body p {
+        font-size: 14px;
+        line-height: 1.8;
+        margin: 16px 0;
+        color: #222;
+        text-align: justify;
+        text-justify: inter-word;
+    }
+    .letter-body p.no-justify { text-align: left; }
+    .letter-body b { color: #000; }
+    .signature-block { margin-top: 50px; }
+    .signature-block p { margin: 4px 0; text-align: left; }
+    .letter-footer {
+        position: absolute;
+        bottom: 15px;
+        left: 0;
+        right: 0;
+        width: 100%;
+    }
+    .letter-footer img { width: 100%; display: block; }
+    @media print {
+        .form-box, .btn-row { display: none; }
+        #letter { display: block; box-shadow: none; }
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h2>OSL Automotives — Credit Request Letter Generator</h2>
+
+    <div class="form-box">
+        <form id="letterForm">
+            <label>Letter Date:</label>
+            <input type="date" id="letterDate" required>
+
+            <label>Credit Amount (Lakh এ):</label>
+            <input type="text" id="amountLakh" value="350" required>
+
+            <label>LOB (একাধিক সিলেক্ট করা যাবে):</label>
+            <div class="lob-options">
+                <label><input type="checkbox" class="lobCheck" value="SCV C & PU"> SCV C & PU</label>
+                <label><input type="checkbox" class="lobCheck" value="CV Pass"> CV Pass</label>
+                <label><input type="checkbox" class="lobCheck" value="ILMCV"> ILMCV</label>
+                <label><input type="checkbox" class="lobCheck" value="HCV"> HCV</label>
+            </div>
+
+            <label>Till Date:</label>
+            <input type="date" id="tillDate" required>
+
+            <label>Payer Code:</label>
+            <input type="text" id="payerCode" value="11E2140" required>
+
+            <label>Cheque No:</label>
+            <input type="text" id="chequeNo" value="100491" required>
+
+            <label>Manager / Authorized Person Name:</label>
+            <input type="text" id="managerName" value="Susovan Saha" required>
+
+            <div class="btn-row">
+                <button type="button" onclick="generateLetter()">Submit / Preview</button>
+                <button type="button" class="pdf-btn" onclick="downloadPDF()">Generate PDF</button>
+            </div>
+
+            <div id="statusMsg" class="status-msg"></div>
+        </form>
+    </div>
+
+    <div id="letter">
+        <div class="letter-header">
+            <img src="header.png" alt="OSL Automotives Letterhead">
+        </div>
+
+        <div class="letter-content">
+            <div class="date-line">Date:- <span id="p_letterDate"></span></div>
+
+            <div class="letter-body">
+                <p class="no-justify">To,<br>
+                The Regional Manager/RCFI<br>
+                Tata Motors Limited<br>
+                Region: - EAST</p>
+
+                <p><b>Sub:- Credit request for Rs. <span id="p_amountLakh"></span> Lakh for purchase of
+                <span id="p_lob"></span> till <span id="p_tillDate1"></span></b></p>
+
+                <p>I/We hereby request Tata Motors Limited (TML) to allow credit billing in TML under
+                <b><u><span id="p_payerCode"></span></u></b> Payer code for commercial vehicles.</p>
+
+                <p>I/We also confirm that we will repay the credit utilization amount within
+                <span id="p_tillDate2"></span></p>
+
+                <p>Further, I/We hereby authorize TML to swap the invoices against our Inventory funding
+                limits (Channel finance) if available/reinstated on/before the above credit period.</p>
+
+                <p>Further, in case of non-payment of the said amount on due date, TML can deposit our
+                cheque no : <b><span id="p_chequeNo"></span></b> Date ____________ for Rs. ____________
+                and liability for bouncing the cheque, if any, will be on our part.</p>
+
+                <p>I/We also agree to pay interest <b>@ 11% p.a</b> on this credit amount utilized from
+                invoice date to the date of full clearance of the dues.</p>
+
+                <div class="signature-block">
+                    <p>Thanks &amp; Regards</p>
+                    <p>For, OSL Automotives Pvt. Ltd.</p>
+                    <br><br>
+                    <p>(<span id="p_managerName"></span>)</p>
+                    <p>Manager Accounts</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="letter-footer">
+            <img src="footer.png" alt="OSL Automotives Footer">
+        </div>
+    </div>
+</div>
+
+<script>
+// ⚠️ এখানে আপনার Google Apps Script Web App URL বসান ⚠️
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyH1HXkwa0SFGE_yZmOiNcJu3HqaEqRklQinOETeEaOcXz8ehrzciMIT70xL4HsHfZFzw/exec";
+
+function formatOrdinalDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const day = d.getDate();
+    const months = ["January","February","March","April","May","June",
+                    "July","August","September","October","November","December"];
+    const month = months[d.getMonth()];
+    const year = d.getFullYear();
+
+    function ordinalSuffix(n) {
+        const s = ["th", "st", "nd", "rd"];
+        const v = n % 100;
+        return n + (s[(v - 20) % 10] || s[v] || s[0]);
+    }
+    return `${ordinalSuffix(day)}-${month}-${year}`;
+}
+
+function getFormData() {
+    const letterDateRaw = document.getElementById('letterDate').value;
+    const tillDateRaw   = document.getElementById('tillDate').value;
+    const amountLakh    = document.getElementById('amountLakh').value;
+    const payerCode     = document.getElementById('payerCode').value;
+    const chequeNo      = document.getElementById('chequeNo').value;
+    const managerName   = document.getElementById('managerName').value;
+
+    const checkedLobs = Array.from(document.querySelectorAll('.lobCheck:checked'))
+                              .map(cb => cb.value);
+    const lobText = checkedLobs.length ? checkedLobs.join(' & ') : '';
+
+    return {
+        letterDate:  formatOrdinalDate(letterDateRaw),
+        amountLakh:  amountLakh,
+        lob:         lobText,
+        tillDate:    formatOrdinalDate(tillDateRaw),
+        payerCode:   payerCode,
+        chequeNo:    chequeNo,
+        managerName: managerName
+    };
+}
+
+function generateLetter() {
+    const data = getFormData();
+
+    document.getElementById('p_letterDate').innerText = data.letterDate;
+    document.getElementById('p_amountLakh').innerText = data.amountLakh;
+    document.getElementById('p_lob').innerText         = data.lob || '__________';
+    document.getElementById('p_tillDate1').innerText   = data.tillDate;
+    document.getElementById('p_tillDate2').innerText   = data.tillDate;
+    document.getElementById('p_payerCode').innerText   = data.payerCode;
+    document.getElementById('p_chequeNo').innerText    = data.chequeNo;
+    document.getElementById('p_managerName').innerText = data.managerName;
+
+    document.getElementById('letter').style.display = 'block';
+    document.getElementById('letter').scrollIntoView({behavior: 'smooth'});
+
+    return data;
+}
+
+function sendDataToGoogleSheet(data) {
+    const statusEl = document.getElementById('statusMsg');
+    statusEl.className = 'status-msg loading';
+    statusEl.innerText = '⏳ Google Sheet এ ডেটা সেভ হচ্ছে...';
+
+    fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(data)
+    })
+    .then(() => {
+        statusEl.className = 'status-msg success';
+        statusEl.innerText = '✅ ডেটা সফলভাবে Google Sheet এ সেভ হয়েছে!';
+    })
+    .catch((err) => {
+        statusEl.className = 'status-msg error';
+        statusEl.innerText = '❌ Google Sheet এ সেভ করতে সমস্যা হয়েছে। PDF তবুও ডাউনলোড হবে।';
+        console.error(err);
+    });
+}
+
+async function downloadPDF() {
+    const data = generateLetter();
+
+    if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "YOUR_WEB_APP_URL_HERE") {
+        sendDataToGoogleSheet(data);
+    }
+
+    const fileName = 'OSL_Credit_Request_' + (data.letterDate || 'Letter') + '.pdf';
+
+    const element = document.getElementById('letter');
+    element.style.display = 'block';
+
+    const opt = {
+        margin:       0,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+
+    try {
+        const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+
+        if (window.showSaveFilePicker) {
+            try {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: fileName,
+                    types: [{ description: 'PDF File', accept: { 'application/pdf': ['.pdf'] } }]
+                });
+                const writable = await handle.createWritable();
+                await writable.write(pdfBlob);
+                await writable.close();
+                return;
+            } catch (err) {
+                if (err.name === 'AbortError') return;
+            }
+        }
+
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(pdfBlob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+
+    } catch (err) {
+        alert('PDF তৈরিতে সমস্যা হয়েছে: ' + err.message);
+    }
+}
+</script>
+
+</body>
+</html>
