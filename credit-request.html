@@ -24,6 +24,18 @@
     .container { max-width: 900px; margin: 0 auto; }
     h2 { color: #16215c; text-align: center; }
 
+    .topbar { margin: 0 0 6px; }
+    .back {
+      display: inline-block;
+      padding: 10px 14px;
+      color: #16215c;
+      background: #fff;
+      border: 1px solid #d4d9e5;
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
     .form-box {
       padding: 25px;
       margin-bottom: 30px;
@@ -81,6 +93,7 @@
       cursor: pointer;
     }
     .btn-row button.pdf-btn { background: #16215c; }
+    .btn-row button.cheque-btn { background: #0b6b3a; }
     .btn-row button:hover { opacity: .88; }
     .btn-row button:disabled { opacity: .55; cursor: wait; }
 
@@ -159,7 +172,7 @@
 
     @media print {
       body { margin: 0; padding: 0; background: #fff; }
-      .form-box, .container > h2, .btn-row { display: none !important; }
+      .form-box, .container > h2, .topbar, .btn-row { display: none !important; }
       #letter { display: block !important; margin: 0; }
     }
 
@@ -171,6 +184,7 @@
 </head>
 <body>
   <div class="container">
+    <div class="topbar"><a class="back" href="index.html">&#8592; Back to Home</a></div>
     <h2>OSL Automotives — Credit Request Letter Generator</h2>
 
     <div class="form-box">
@@ -204,6 +218,7 @@
         <div class="btn-row">
           <button type="button" id="previewBtn">Submit / Preview</button>
           <button type="button" class="pdf-btn" id="pdfBtn">Generate PDF</button>
+          <button type="button" class="cheque-btn" id="chequeBtn">Generate Cheque</button>
         </div>
         <div id="statusMsg" class="status-msg" role="status" aria-live="polite"></div>
       </form>
@@ -341,6 +356,20 @@
       byId("letter").style.display = "block";
       byId("letter").scrollIntoView({ behavior: "smooth", block: "start" });
       setStatus("Preview ready.", "success");
+    }
+
+    // Opens the Bank Cheque page with this form's Cheque No and amount already filled in.
+    // Cheque amount = Credit Amount (Lakh) x 1,00,000, e.g. 350 Lakh -> 35000000.00
+    // (editable on the Bank Cheque page if the cheque amount is different).
+    function openChequePage() {
+      const lakh = parseFloat(byId("amountLakh").value.replace(/[^0-9.]/g, ""));
+      const chequeNo = byId("chequeNo").value.replace(/\D/g, "");
+      if (!isFinite(lakh) || lakh <= 0) { setStatus("Cheque er jonno sothik Credit Amount (Lakh) likhun.", "error"); return; }
+      if (!chequeNo) { setStatus("Cheque er jonno Cheque No likhun.", "error"); return; }
+      const rupees = (Math.round(lakh * 100000 * 100) / 100).toFixed(2);
+      const params = new URLSearchParams({ amount: rupees, chequeNo: chequeNo });
+      window.open(`bank-cheque.html?${params.toString()}`, "_blank");
+      setStatus("Bank Cheque page khule geche (amount ar cheque number auto-fill).", "success");
     }
 
     function sendDataToGoogleSheet(data) {
@@ -617,6 +646,7 @@
 
     byId("previewBtn").addEventListener("click", previewLetter);
     byId("pdfBtn").addEventListener("click", downloadPDFSinglePage);
+    byId("chequeBtn").addEventListener("click", openChequePage);
   </script>
 </body>
 </html>
