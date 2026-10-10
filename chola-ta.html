@@ -32,8 +32,9 @@
     #letter { position: relative; display: none; width: 210mm; height: 297mm; margin: 0 auto; overflow: hidden; background: #fff; box-shadow: 0 2px 18px #00000020; }
     .letter-header { position: absolute; top: 0; left: 0; width: 100%; line-height: 0; }
     .letter-header img { display: block; width: 100%; height: auto; }
-    .letter-footer { position: absolute; left: 0; right: 0; bottom: 0; line-height: 0; }
-    .letter-footer img { display: block; width: 100%; height: auto; }
+    .letter-footer { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; height: 25mm; overflow: hidden; line-height: 0; }
+    /* Keep the footer full-width like the letterhead preview, with a fixed safe height. */
+    .letter-footer img { display: block; width: 100%; height: 25mm; object-fit: fill; }
     .date-line { position: absolute; left: 10mm; right: 10mm; top: 64mm; text-align: right; font: bold 10pt Arial, Helvetica, sans-serif; }
     .recipient { position: absolute; left: 10mm; top: 64.5mm; width: 155mm; font: bold 10pt/1.36 'Times New Roman', Times, serif; }
     .subject { position: absolute; left: 10mm; top: 101mm; font: bold 10.5pt 'Times New Roman', Times, serif; text-decoration: underline; }
@@ -254,12 +255,14 @@
       return { x, y, width, height };
     }
 
-    function addImageBottom(pdf, img, maxHeight) {
+    function addImageBottom(pdf, img, maxHeight = 25) {
       if (!img.naturalWidth || !img.naturalHeight) throw new Error(`Image failed to load: ${img.getAttribute("src")}`);
-      const scale = Math.min(210 / img.naturalWidth, maxHeight / img.naturalHeight);
-      const width = img.naturalWidth * scale;
-      const height = img.naturalHeight * scale;
-      const x = (210 - width) / 2;
+      // Match the preview: footer spans the complete page width. Cap its height to
+      // 25 mm so differently cropped GitHub copies cannot push the bank table upward.
+      const width = 210;
+      const naturalHeight = width * img.naturalHeight / img.naturalWidth;
+      const height = Math.min(naturalHeight, maxHeight);
+      const x = 0;
       const y = 297 - height;
       pdf.addImage(img, "PNG", x, y, width, height, undefined, "FAST");
       return { x, y, width, height };
@@ -369,7 +372,7 @@
         const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
         pdf.setProperties({ title: `OSL Chola TA Request - ${data.date}`, author: "OSL Automotives Pvt. Ltd.", subject: "Trade Advance request" });
         addImageFitWidth(pdf, header, 0, 34);
-        const footerPlacement = addImageBottom(pdf, footer, 28);
+        const footerPlacement = addImageBottom(pdf, footer, 25);
 
         // Fixed coordinates mirror the browser preview; text remains selectable and crisp.
         pdf.setTextColor(20, 20, 20);
@@ -417,9 +420,16 @@
 
         pdf.setFont("times", "normal");
         pdf.setFontSize(9.5);
-        pdf.text("Dealer Bank Details:", 10, 224.5);
-        const tableBottom = drawTable(pdf, 226.7);
-        if (tableBottom > footerPlacement.y - 2) throw new Error("Bank details table overlaps the footer. Please check the header/footer image dimensions.");
+        // Table height follows the eight fixed rows below (total 41.6 mm).
+        // Calculate a safe top position from the actual footer position instead
+        // of failing with a false-positive overlap warning on differently sized assets.
+        const bankTableHeight = 41.6;
+        const bankTableTop = Math.min(226.7, footerPlacement.y - 2 - bankTableHeight);
+        pdf.text("Dealer Bank Details:", 10, bankTableTop - 2.2);
+        const tableBottom = drawTable(pdf, bankTableTop);
+        if (tableBottom > footerPlacement.y - 1) {
+          throw new Error("The bank details table cannot fit above the footer. Please confirm footer.png is the OSL footer image and has no oversized blank margins.");
+        }
 
         const fileDate = (data.dateInput || "Letter").replace(/[^0-9-]/g, "");
         pdf.save(`OSL_Chola_TA_Request_${fileDate || "Letter"}.pdf`);
