@@ -1,224 +1,191 @@
 <!doctype html>
-<html lang="en">
+<html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#142b63">
-  <title>OSL Automotives - Bank Cheque</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&display=swap" rel="stylesheet">
-  <style>
-    /* MICR font is embedded below, so no separate GnuMICR.ttf file is needed. */
-    @font-face { font-family: 'MICR'; src: url(data:font/ttf;base64,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) format('truetype'); font-display: block; }
-    :root { --navy: #16265f; --red: #c8102e; --ink: #222; --muted: #596274; }
-    * { box-sizing: border-box; }
-    body { margin: 0; padding: 20px; background: #f2f3f7; color: var(--ink); font-family: Arial, Helvetica, sans-serif; }
-    .container { max-width: 1080px; margin: 0 auto; }
-    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 0 0 18px; }
-    h1 { color: var(--navy); font-size: clamp(22px, 3vw, 30px); margin: 0; }
-    .back { display: inline-block; padding: 10px 14px; color: var(--navy); background: #fff; border: 1px solid #d4d9e5; border-radius: 8px; font-weight: 700; text-decoration: none; }
-    .form-box { padding: 22px; margin-bottom: 24px; background: #fff; border-radius: 10px; box-shadow: 0 3px 18px #17264c12; }
-    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px 18px; }
-    label { display: block; color: #333; font-size: 14px; font-weight: 700; }
-    input { display: block; width: 100%; margin-top: 6px; padding: 10px 11px; border: 1px solid #c9ced8; border-radius: 6px; background: #fff; font: inherit; font-size: 14px; }
-    input:focus { outline: 2px solid #b9c8ff; border-color: #6b82cf; }
-    .btn-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 22px; }
-    button { border: 0; border-radius: 6px; padding: 12px 24px; color: #fff; background: var(--red); font-size: 15px; font-weight: 700; cursor: pointer; }
-    .status { min-height: 20px; margin-top: 14px; text-align: center; font-size: 13px; font-weight: 700; }
-    .status.success { color: #18732b; } .status.error { color: #c8102e; }
-    .preview-heading { margin: 24px 0 12px; color: var(--navy); font-size: 20px; }
-    #chequeCanvas { width: 100%; max-width: 900px; height: auto; display: block; margin: 0 auto; background: #fff; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 2px 18px #00000020; }
-    @media (max-width: 700px) { body { padding: 12px; } .form-box { padding: 16px; } .form-grid { grid-template-columns: 1fr; } }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#16265f">
+<title>OSL Automotives — Secure Cheque Photo Viewer</title>
+<style>
+  :root { color-scheme: light; --navy:#16265f; --red:#c8102e; --ink:#202124; --muted:#5f6368; --line:#d9deea; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:24px 14px; background:#f3f5f9; color:var(--ink); font:16px/1.5 Arial,Helvetica,sans-serif; }
+  main { width:min(760px,100%); margin:0 auto; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+  h1 { color:var(--navy); font-size:clamp(22px,4vw,30px); margin:0; }
+  .back { display:inline-block; padding:9px 13px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--navy); text-decoration:none; font-weight:700; }
+  .card { padding:22px; border:1px solid var(--line); border-radius:14px; background:#fff; box-shadow:0 4px 18px #17264c0c; }
+  .intro { margin:0 0 16px; color:var(--muted); }
+  .notice { padding:12px 14px; margin:16px 0; border-left:4px solid var(--navy); border-radius:7px; background:#eef3ff; }
+  label { display:block; margin:16px 0 7px; font-weight:700; }
+  input[type=password], input[type=file] { width:100%; padding:12px; border:1px solid #bbc4d5; border-radius:8px; background:#fff; font:inherit; }
+  .show { display:flex; align-items:center; gap:9px; margin-top:10px; font-weight:400; }
+  .show input { width:18px; height:18px; }
+  .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+  button { min-height:44px; padding:11px 18px; border:0; border-radius:8px; background:var(--navy); color:#fff; font-size:15px; font-weight:700; cursor:pointer; }
+  button.secondary { background:#edf0f6; color:var(--navy); }
+  button:disabled { opacity:.6; cursor:wait; }
+  .status { min-height:24px; margin-top:14px; white-space:pre-wrap; overflow-wrap:anywhere; font-weight:700; }
+  .status.error { color:#b00020; } .status.success { color:#176b36; }
+  .preview { display:none; margin-top:22px; padding-top:18px; border-top:1px solid var(--line); }
+  .preview.visible { display:block; }
+  .preview h2 { margin:0 0 12px; color:var(--navy); font-size:20px; }
+  #chequeImage { display:block; max-width:100%; max-height:70vh; height:auto; margin:0 auto; object-fit:contain; border:1px solid #ddd; border-radius:6px; background:#fff; }
+  .small { color:var(--muted); font-size:13px; }
+  @media(max-width:560px) { body{padding:14px 10px}.card{padding:17px}.actions button{width:100%} }
+</style>
 </head>
 <body>
-  <main class="container">
-    <header class="topbar">
-      <h1>Bank Cheque</h1>
-      <a class="back" href="index.html">&#8592; Back to Home</a>
-    </header>
+<main>
+  <header class="topbar">
+    <h1>Bank Cheque</h1>
+    <a class="back" href="index.html">← Back to Home</a>
+  </header>
+  <section class="card">
+    <p class="intro">Encrypted cheque photo দেখতে আপনার পাসওয়ার্ড দিন। ছবিটি ব্রাউজারের মধ্যেই decrypt হবে।</p>
+    <div class="notice"><strong>নিরাপত্তা:</strong> Public GitHub Pages-এ <code>cheque.enc</code> ফাইলটি ডাউনলোডযোগ্য হতে পারে, কিন্তু সঠিক পাসওয়ার্ড ছাড়া ছবিটি খুলবে না। অন্তত ১৬ অক্ষরের শক্তিশালী, আলাদা পাসওয়ার্ড ব্যবহার করুন।</div>
 
-    <section class="form-box" aria-label="Bank cheque form">
-      <div class="form-grid">
-        <label for="amount">Amount (Rs.)
-          <input id="amount" type="text" inputmode="decimal" placeholder="150000" autocomplete="off">
-        </label>
-        <label for="chequeNo">Cheque Number
-          <input id="chequeNo" type="text" inputmode="numeric" maxlength="6" placeholder="035376" autocomplete="off">
-        </label>
+    <form id="decryptForm">
+      <label for="password">পাসওয়ার্ড</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="আপনার encryption password লিখুন">
+      <label class="show"><input id="showPassword" type="checkbox"> পাসওয়ার্ড দেখান</label>
+
+      <label for="encryptedFile">Encrypted ফাইল (ঐচ্ছিক)</label>
+      <input id="encryptedFile" name="encryptedFile" type="file" accept=".enc,application/octet-stream">
+      <p class="small">GitHub Pages-এ <code>cheque.enc</code> একই ফোল্ডারে থাকলে ফাইল বাছাই না করলেও চলবে। Local use-এর জন্য এখানে <code>cheque.enc</code> নির্বাচন করতে পারেন।</p>
+
+      <div class="actions">
+        <button id="decryptButton" type="submit">পাসওয়ার্ড দিয়ে Cheque খুলুন</button>
+        <button id="hideButton" class="secondary" type="button">ছবি লুকান</button>
       </div>
-      <div class="btn-row">
-        <button id="chequeDownload" type="button">Download Cheque (JPG)</button>
-      </div>
-      <div id="chequeStatus" class="status" role="status" aria-live="polite"></div>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+    </form>
+
+    <section id="preview" class="preview" aria-live="polite">
+      <h2>Cheque Photo</h2>
+      <img id="chequeImage" alt="Decrypted cheque photo">
+      <p class="small">ছবিটি শুধু দেখানো হচ্ছে; এই পেজ cheque-এর অঙ্ক বা নম্বর পরিবর্তন করে না।</p>
     </section>
-
-    <h2 class="preview-heading">Cheque Preview</h2>
-    <canvas id="chequeCanvas"></canvas>
-  </main>
-
+  </section>
+</main>
 <script>
+'use strict';
 (() => {
-  /* ---------- CONFIG: sudhu eikhane change korben ---------- */
-  const CFG = {
-    amountInput:   '#amount',          // apnar Amount input-er id
-    chequeNoInput: '#chequeNo',        // apnar Cheque No input-er id
-    canvas:        '#chequeCanvas',
-    downloadBtn:   '#chequeDownload',
-    status:        '#chequeStatus',
-    chequeSrc:     'cheque.jpg',       // CLEAN cheque photo (lal/sobuj box charao)
-    refW: 1802, refH: 873,             // je photo theke box coordinate nilam tar size
-    red:   { x: 691, y: 431, w: 505, h: 33 },   // Not Above amount box
-    green: { x: 459, y: 764, w: 172, h: 29 },   // Cheque Number box
-    handFont: 'Caveat',
-    micrFont: 'MICR',
-    inkColor:  '#1b2a6b',              // ballpoint neel; kalo chaile '#111'
-    micrColor: '#111111',
-    micrScale: 1.07,                    // MICR digit boro/choto korte
-    prefix: 'Not Above ',
-    debugBoxes: false                  // true korle box-er outline dekhabe (calibration)
-  };
+  const MAGIC = new TextEncoder().encode('OSLENC01');
+  const SALT_LENGTH = 16;
+  const IV_LENGTH = 12;
+  const HEADER_LENGTH = MAGIC.length + SALT_LENGTH + IV_LENGTH;
+  const ITERATIONS = 600000;
 
-  const $ = s => document.querySelector(s);
-  const cv = $(CFG.canvas), ctx = cv.getContext('2d');
-  const img = new Image();
-  let ready = false;
-  const statusEl = $(CFG.status);
-  const setStatus = (msg, kind) => { if (statusEl) { statusEl.textContent = msg || ''; statusEl.className = 'status ' + (kind || ''); } };
+  const form = document.getElementById('decryptForm');
+  const passwordEl = document.getElementById('password');
+  const fileEl = document.getElementById('encryptedFile');
+  const showEl = document.getElementById('showPassword');
+  const button = document.getElementById('decryptButton');
+  const hideButton = document.getElementById('hideButton');
+  const statusEl = document.getElementById('status');
+  const preview = document.getElementById('preview');
+  const imageEl = document.getElementById('chequeImage');
+  let imageUrl = null;
 
-  /* seeded random: same input = same handwriting, refresh-e bodlabe na */
-  const seedFrom = s => { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
-  const mulberry32 = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
-
-  const fmtINR = raw => {
-    const n = parseFloat(String(raw).replace(/[^0-9.]/g, ''));
-    if (!isFinite(n)) return '';
-    return new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
-  };
-
-  function drawHand(text, b, kx, ky) {
-    if (!text) return;
-    const bx = b.x * kx, by = b.y * ky, bw = b.w * kx, bh = b.h * ky;
-    const rnd = mulberry32(seedFrom(text));
-    let size = bh * 1.15;
-    const setFont = s => { ctx.font = `500 ${s}px ${CFG.handFont}, cursive`; };
-    const textW = s => { setFont(s); return [...text].reduce((w, c) => w + ctx.measureText(c).width + s * 0.02, 0); };
-    const w = textW(size);
-    if (w > bw * 0.95) size *= (bw * 0.95) / w;      // box-e na dhukle auto-shrink
-    setFont(size);
-
-    let x = bx + 4 * kx;
-    const baseline = by + bh * 0.78;
-    ctx.save();
-    ctx.globalCompositeOperation = 'multiply';       // paper-er chaya lekhar opor dekha jabe
-    ctx.fillStyle = CFG.inkColor;
-    ctx.globalAlpha = 0.92;
-    ctx.shadowColor = CFG.inkColor;
-    ctx.shadowBlur = size * 0.03;                    // halka ink bleed
-    for (const ch of text) {
-      const cw = ctx.measureText(ch).width;
-      const jy  = (rnd() - 0.5) * size * 0.10;       // upor-niche
-      const rot = (rnd() - 0.5) * 0.07 - 0.012;      // halka tilt
-      const sc  = 1 + (rnd() - 0.5) * 0.08;          // size variation
-      const rise = ((x - bx) / bw) * size * 0.04;    // line dhire dhire upore uthbe
-      ctx.save();
-      ctx.translate(x + cw / 2, baseline + jy - rise);
-      ctx.rotate(rot);
-      ctx.scale(sc, sc);
-      ctx.fillText(ch, -cw / 2, 0);
-      ctx.restore();
-      x += cw + size * 0.02 + (rnd() - 0.5) * size * 0.03;
-    }
-    ctx.restore();
+  function setStatus(message, kind = '') {
+    statusEl.textContent = message;
+    statusEl.className = 'status' + (kind ? ' ' + kind : '');
   }
 
-  function drawMicr(no, b, kx, ky) {
-    if (!no) return;
-    const digits = no.padStart(6, '0').slice(-6);    // 6 digit
-    const cell = (b.w * kx) / 6;
-    ctx.save();
-    ctx.globalCompositeOperation = 'multiply';
-    ctx.fillStyle = CFG.micrColor;
-    ctx.font = `${b.h * ky * 1.1 * CFG.micrScale}px ${CFG.micrFont}, monospace`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'alphabetic';
-    [...digits].forEach((d, i) => ctx.fillText(d, b.x * kx + cell * (i + 0.5), b.y * ky + b.h * ky * 0.95));
-    ctx.restore();
+  function equalBytes(a, b) {
+    if (a.length < b.length) return false;
+    for (let i = 0; i < b.length; i++) if (a[i] !== b[i]) return false;
+    return true;
   }
 
-  function render() {
-    if (!ready) return;
-    const W = img.naturalWidth, H = img.naturalHeight;
-    if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
-    const kx = W / CFG.refW, ky = H / CFG.refH;
-    ctx.clearRect(0, 0, W, H);
-    ctx.drawImage(img, 0, 0, W, H);
-
-    const amt = fmtINR($(CFG.amountInput).value);
-    drawHand(amt ? CFG.prefix + amt : '', CFG.red, kx, ky);
-
-    const no = ($(CFG.chequeNoInput).value || '').replace(/\D/g, '');
-    drawMicr(no, CFG.green, kx, ky);
-
-    if (CFG.debugBoxes) {
-      ctx.save(); ctx.lineWidth = 2;
-      ctx.strokeStyle = 'red';   ctx.strokeRect(CFG.red.x * kx, CFG.red.y * ky, CFG.red.w * kx, CFG.red.h * ky);
-      ctx.strokeStyle = 'green'; ctx.strokeRect(CFG.green.x * kx, CFG.green.y * ky, CFG.green.w * kx, CFG.green.h * ky);
-      ctx.restore();
-    }
+  async function deriveKey(password, salt) {
+    const passwordBytes = new TextEncoder().encode(password);
+    const baseKey = await crypto.subtle.importKey('raw', passwordBytes, 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations: ITERATIONS, hash: 'SHA-256' },
+      baseKey,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['decrypt']
+    );
   }
 
-  let raf = 0;
-  const schedule = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(render); };
-  [CFG.amountInput, CFG.chequeNoInput].forEach(sel => {
-    const el = $(sel);
-    if (el) ['input', 'change'].forEach(ev => el.addEventListener(ev, schedule));
-  });
+  async function getEncryptedBytes() {
+    const selected = fileEl.files && fileEl.files[0];
+    if (selected) return new Uint8Array(await selected.arrayBuffer());
+    const response = await fetch('cheque.enc', { cache: 'no-store' });
+    if (!response.ok) throw new Error('cheque.enc পাওয়া যায়নি। ফাইলটি bank-cheque.html-এর একই GitHub Pages ফোল্ডারে upload করুন, অথবা উপরের file picker দিয়ে নির্বাচন করুন।');
+    return new Uint8Array(await response.arrayBuffer());
+  }
 
-  $(CFG.downloadBtn).addEventListener('click', () => {
-    if (!ready) { setStatus('Cheque image (cheque.jpg) load hoy ni. File ta HTML er pashe rakhun.', 'error'); return; }
-    if (!$(CFG.amountInput).value.trim() || !$(CFG.chequeNoInput).value.trim()) {
-      setStatus('Age Amount ar Cheque Number duto-i likhun.', 'error'); return;
-    }
+  function detectMime(bytes) {
+    if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'image/jpeg';
+    if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return 'image/png';
+    if (bytes.length >= 12 && String.fromCharCode(...bytes.slice(0, 4)) === 'RIFF' && String.fromCharCode(...bytes.slice(8, 12)) === 'WEBP') return 'image/webp';
+    throw new Error('Decrypt হয়েছে, কিন্তু ফাইলটি JPEG, PNG বা WebP ছবি নয়। Encrypt করার সময় মূল image file নির্বাচন করেছিলেন কি না যাচাই করুন।');
+  }
+
+  function hideImage() {
+    preview.classList.remove('visible');
+    imageEl.removeAttribute('src');
+    if (imageUrl) URL.revokeObjectURL(imageUrl);
+    imageUrl = null;
+    setStatus('ছবি লুকানো হয়েছে।', '');
+  }
+
+  showEl.addEventListener('change', () => { passwordEl.type = showEl.checked ? 'text' : 'password'; });
+  hideButton.addEventListener('click', hideImage);
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    setStatus('Decrypt হচ্ছে…');
+    button.disabled = true;
+    button.textContent = 'অপেক্ষা করুন…';
     try {
-      cv.toBlob(blob => {
-        if (!blob) { setStatus('JPG toiri kora jayni.', 'error'); return; }
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'cheque-' + (($(CFG.chequeNoInput).value || 'preview').replace(/\D/g, '') || 'preview') + '.jpg';
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-        setStatus('Cheque JPG download hoyeche.', 'success');
-      }, 'image/jpeg', 0.95);
-    } catch (e) {
-      setStatus('Download hocche na: file:// theke na khule hosting/local server (http) diye kholen.', 'error');
+      if (!globalThis.crypto || !crypto.subtle) throw new Error('এই ব্রাউজারে Web Crypto নেই। HTTPS GitHub Pages-এ অথবা updated Chrome/Edge-এ খুলুন।');
+      const password = passwordEl.value;
+      if (!password) throw new Error('পাসওয়ার্ড লিখুন।');
+      const bytes = await getEncryptedBytes();
+      if (bytes.length <= HEADER_LENGTH + 16) throw new Error('cheque.enc ফাইলটি অসম্পূর্ণ বা সঠিক encryption format-এর নয়।');
+      if (!equalBytes(bytes, MAGIC)) throw new Error('ফাইলটি OSLENC01 format-এর encrypted cheque.enc নয়। Encryptor tool দিয়ে আবার encrypt করুন।');
+      const salt = bytes.slice(MAGIC.length, MAGIC.length + SALT_LENGTH);
+      const ivStart = MAGIC.length + SALT_LENGTH;
+      const iv = bytes.slice(ivStart, ivStart + IV_LENGTH);
+      const encrypted = bytes.slice(HEADER_LENGTH);
+      const key = await deriveKey(password, salt);
+      let plain;
+      try {
+        plain = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv, tagLength: 128 }, key, encrypted));
+      } catch (_) {
+        throw new Error('পাসওয়ার্ড ভুল অথবা encrypted ফাইলটি ক্ষতিগ্রস্ত। পাসওয়ার্ড আবার যাচাই করুন।');
+      }
+      const mime = detectMime(plain);
+      const blob = new Blob([plain], { type: mime });
+      const newUrl = URL.createObjectURL(blob);
+      const testImage = new Image();
+      testImage.onload = () => {
+        if (imageUrl) URL.revokeObjectURL(imageUrl);
+        imageUrl = newUrl;
+        imageEl.src = imageUrl;
+        preview.classList.add('visible');
+        setStatus('Cheque photo সফলভাবে decrypt হয়েছে।', 'success');
+        button.disabled = false;
+        button.textContent = 'পাসওয়ার্ড দিয়ে Cheque খুলুন';
+      };
+      testImage.onerror = () => {
+        URL.revokeObjectURL(newUrl);
+        setStatus('ছবিটি প্রদর্শন করা যায়নি। encrypted ফাইলটি যাচাই করুন।', 'error');
+        button.disabled = false;
+        button.textContent = 'পাসওয়ার্ড দিয়ে Cheque খুলুন';
+      };
+      testImage.src = newUrl;
+    } catch (error) {
+      console.error(error);
+      setStatus(error instanceof Error ? error.message : 'Decrypt করা যায়নি।', 'error');
+      button.disabled = false;
+      button.textContent = 'পাসওয়ার্ড দিয়ে Cheque খুলুন';
     }
   });
-
-  /* Credit Request page theke ashle: bank-cheque.html?amount=35000000.00&chequeNo=100491 */
-  (function prefillFromUrl() {
-    const qs = new URLSearchParams(location.search);
-    const amt = qs.get('amount'), no = qs.get('chequeNo');
-    if (amt) $(CFG.amountInput).value = amt;
-    if (no) $(CFG.chequeNoInput).value = no.replace(/\D/g, '').slice(-6);
-    if (amt || no) setStatus('Credit Request form theke Amount ar Cheque Number auto-fill hoyeche.', 'success');
-  })();
-
-  (async function init() {
-    try {
-      await Promise.all([
-        document.fonts.load(`500 40px ${CFG.handFont}`),
-        document.fonts.load(`40px ${CFG.micrFont}`)
-      ]);
-    } catch (e) { console.warn('Font load issue:', e); }
-    img.onload = () => { ready = true; render(); };
-    img.onerror = () => setStatus('cheque.jpg paoya jayni. Clean cheque photo ta "cheque.jpg" naame ei HTML er pashe rakhun.', 'error');
-    img.src = CFG.chequeSrc;
-  })();
-
-  // apnar form-er onno JS theke value set korle eta call korun: renderCheque()
-  window.renderCheque = render;
 })();
 </script>
 </body>
