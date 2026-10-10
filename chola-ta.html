@@ -42,14 +42,15 @@
     .para1 { top: 124mm; }
     .para2 { top: 144mm; }
     .para3 { top: 153mm; }
-    .thankyou { position: absolute; left: 10mm; top: 164mm; font: 10.5pt Arial, Helvetica, sans-serif; }
-    .faithfully { position: absolute; left: 10mm; top: 172mm; font: 10.5pt Arial, Helvetica, sans-serif; }
+    .thankyou { position: absolute; z-index: 4; left: 10mm; top: 164mm; font: bold 10.5pt Arial, Helvetica, sans-serif; }
+    .faithfully { position: absolute; z-index: 4; left: 10mm; top: 172mm; font: normal 10.5pt Arial, Helvetica, sans-serif; }
     /* This transparent asset includes the company authorization text, handwritten signature and Director label.
        Overlay it on the complete signatory block; do not use the round company seal on this Chola TA letter. */
     .director-signature { position: absolute; z-index: 3; left: 9.2mm; top: 168mm; width: 60mm; height: auto; pointer-events: none; }
-    .director-name { position: absolute; z-index: 2; left: 10mm; top: 207mm; font: 10.5pt Arial, Helvetica, sans-serif; }
-    .bank-heading { position: absolute; left: 10mm; top: 215mm; font: 9.5pt 'Times New Roman', Times, serif; }
-    .bank-table { position: absolute; left: 10mm; top: 218.2mm; width: 190mm; border-collapse: collapse; table-layout: fixed; font: 7.2pt/1.1 'Times New Roman', Times, serif; color: #111; }
+    .director-name { position: absolute; z-index: 4; left: 10mm; top: 207mm; font: bold 10.5pt Arial, Helvetica, sans-serif; }
+    .director-title { position: absolute; z-index: 4; left: 10mm; top: 212.5mm; font: bold 10.5pt Arial, Helvetica, sans-serif; }
+    .bank-heading { position: absolute; left: 10mm; top: 223mm; font: 9.5pt 'Times New Roman', Times, serif; }
+    .bank-table { position: absolute; left: 10mm; top: 226.7mm; width: 190mm; border-collapse: collapse; table-layout: fixed; font: 7.2pt/1.1 'Times New Roman', Times, serif; color: #111; }
     .bank-table td { border: .25mm solid #333; padding: .8mm 1.1mm; height: 5.2mm; vertical-align: middle; overflow-wrap: normal; }
     .bank-table td.label { white-space: nowrap; }
     .bank-table td.value { font-weight: bold; }
@@ -81,10 +82,10 @@
             <input type="date" id="letterDate" required>
           </label>
           <label for="amount">Trade Advance Amount (Rs.)
-            <input type="number" id="amount" value="15000000.00" min="0" step="0.01" required>
+            <input type="number" id="amount" value="100,00,00,000.00" min="0" step="0.01" required>
           </label>
           <label for="amountWords" class="span-2">Amount in Words
-            <input type="text" id="amountWords" value="One Crore Fifty Lakhs Zero and Paise Zero Only" required>
+            <input type="text" id="amountWords" value="Zero Crore Zero Lakhs and Paise Zero Only" required>
             <span class="hint">Auto-updates when the amount changes; you can edit the wording manually if needed.</span>
           </label>
         </div>
@@ -111,6 +112,7 @@
         <div class="faithfully">Yours faithfully,</div>
         <img class="director-signature" src="Director%20Signature.png" alt="Director signature and company authorization; no round company stamp">
         <div class="director-name">(Pawan Kumar Goyal)</div>
+        <div class="director-title">Director</div>
         <div class="bank-heading"><strong>Dealer Bank Details:</strong></div>
         <table class="bank-table" aria-label="Dealer bank details">
           <colgroup><col style="width:18%"><col style="width:31%"><col style="width:25.5%"><col style="width:25.5%"></colgroup>
@@ -393,27 +395,26 @@
         pdf.setFontSize(10);
         pdf.text("The amount will be subsequently adjusted with the forth coming funding / Case.", 10, 147.2);
         pdf.text("You Kind consideration is highly solicited and oblige.", 10, 156.2);
-        pdf.setFont("times", "normal");
-        pdf.setFontSize(10.5);
-        pdf.text("Thanking You,", 10, 167.2);
-        pdf.text("Yours faithfully,", 10, 175.3);
-
-        // Draw the printed signatory name first, then overlay the transparent signature artwork.
-        // The transparent PNG lets the underlying words remain readable, like the round stamp overlay.
-        // Do not use the round stamp_signature.png on this Chola TA letter.
-        pdf.setFont("times", "normal");
-        pdf.setFontSize(10.5);
-        pdf.text("(Pawan Kumar Goyal)", 10, 210.0);
-
-        // Overlay the larger transparent signature artwork over the signatory block, while keeping the bank table clear.
+        // Draw the transparent signature artwork first. Text is added afterward so it remains legible on top.
+        // This Chola TA letter uses Director Signature.png, not the round stamp_signature.png.
         const signatureWidth = 60;
         const signatureHeight = signatureWidth * directorSignature.naturalHeight / directorSignature.naturalWidth;
         pdf.addImage(directorSignature, "PNG", 9.2, 168, signatureWidth, signatureHeight, undefined, "FAST");
 
+        // Only "Yours faithfully," is regular. Other sign-off lines are bold as requested.
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(10.5);
+        pdf.text("Thanking You,", 10, 167.2);
+        pdf.setFont("helvetica", "normal");
+        pdf.text("Yours faithfully,", 10, 175.3);
+        pdf.setFont("helvetica", "bold");
+        pdf.text("(Pawan Kumar Goyal)", 10, 210.0);
+        pdf.text("Director", 10, 215.5);
+
         pdf.setFont("times", "normal");
         pdf.setFontSize(9.5);
-        pdf.text("Dealer Bank Details:", 10, 216.5);
-        const tableBottom = drawTable(pdf, 218.7);
+        pdf.text("Dealer Bank Details:", 10, 224.5);
+        const tableBottom = drawTable(pdf, 226.7);
         if (tableBottom > footerPlacement.y - 2) throw new Error("Bank details table overlaps the footer. Please check the header/footer image dimensions.");
 
         const fileDate = (data.dateInput || "Letter").replace(/[^0-9-]/g, "");
