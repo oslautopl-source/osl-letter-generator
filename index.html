@@ -15,7 +15,7 @@
       background: radial-gradient(circle at 15% 10%, #e5ebff 0, transparent 36%),
                   linear-gradient(135deg, #f8faff, #eef1f7);
     }
-    .shell { width: min(900px, 100%); }
+    .shell { width: min(1000px, 100%); }
     .brand { text-align: center; margin-bottom: 28px; }
     .brand-mark {
       display: inline-grid; place-items: center; width: 54px; height: 54px;
@@ -25,7 +25,7 @@
     }
     h1 { margin: 15px 0 8px; color: var(--navy); font-size: clamp(25px, 4vw, 34px); }
     .subtitle { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.6; }
-    .choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
     .choice {
       min-height: 205px; padding: 26px; display: flex; flex-direction: column;
       align-items: flex-start; text-decoration: none; color: inherit;
@@ -41,6 +41,7 @@
     .choice p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
     .open-label { margin-top: auto; padding-top: 20px; color: var(--red); font-size: 14px; font-weight: 700; }
     footer { text-align: center; margin-top: 28px; color: #7c8494; font-size: 12px; }
+    @media (max-width: 820px) { .choices { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 600px) { body { padding: 18px; } .choices { grid-template-columns: 1fr; } .choice { min-height: 175px; } }
     @media (prefers-reduced-motion: reduce) { .choice { transition: none; } .choice:hover { transform: none; } }
   </style>
@@ -65,6 +66,12 @@
         <h2>Credit Request</h2>
         <p>Generate the existing OSL credit request letter and download it as a PDF.</p>
         <span class="open-label">Open Credit Request →</span>
+      </a>
+      <a class="choice" href="bank-cheque.html">
+        <span class="icon" aria-hidden="true">₹</span>
+        <h2>Bank Cheque</h2>
+        <p>Enter the amount and cheque number, preview it on the cheque and download it as a JPG.</p>
+        <span class="open-label">Open Bank Cheque →</span>
       </a>
     </nav>
     <footer>OSL Automotives Pvt. Ltd. · Internal Letter Tools</footer>
