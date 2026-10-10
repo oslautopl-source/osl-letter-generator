@@ -42,13 +42,13 @@
     .para1 { top: 124mm; }
     .para2 { top: 144mm; }
     .para3 { top: 153mm; }
-    .thankyou { position: absolute; z-index: 4; left: 10mm; top: 164mm; font: bold 10.5pt Arial, Helvetica, sans-serif; }
-    .faithfully { position: absolute; z-index: 4; left: 10mm; top: 172mm; font: normal 10.5pt Arial, Helvetica, sans-serif; }
+    .thankyou { position: absolute; z-index: 8; left: 10mm; top: 164mm; font: bold 10.5pt Arial, Helvetica, sans-serif; }
+    .faithfully { position: absolute; z-index: 8; left: 10mm; top: 172mm; font: normal 10.5pt Arial, Helvetica, sans-serif; }
     /* This transparent asset includes the company authorization text, handwritten signature and Director label.
        Overlay it on the complete signatory block; do not use the round company seal on this Chola TA letter. */
-    .director-signature { position: absolute; z-index: 3; left: 9.2mm; top: 168mm; width: 60mm; height: auto; pointer-events: none; }
-    .director-name { position: absolute; z-index: 4; left: 10mm; top: 207mm; font: bold 10.5pt Arial, Helvetica, sans-serif; }
-    .director-title { position: absolute; z-index: 4; left: 10mm; top: 212.5mm; font: bold 10.5pt Arial, Helvetica, sans-serif; }
+    .director-signature { position: absolute; z-index: 6; left: 9.2mm; top: 161mm; width: 64mm; height: auto; pointer-events: none; }
+    .director-name { position: absolute; z-index: 8; left: 10mm; top: 207mm; font: bold 10.5pt Arial, Helvetica, sans-serif; }
+    .director-title { position: absolute; z-index: 2; left: 10mm; top: 212.5mm; font: bold 10.5pt Arial, Helvetica, sans-serif; }
     .bank-heading { position: absolute; left: 10mm; top: 223mm; font: 9.5pt 'Times New Roman', Times, serif; }
     .bank-table { position: absolute; left: 10mm; top: 226.7mm; width: 190mm; border-collapse: collapse; table-layout: fixed; font: 7.2pt/1.1 'Times New Roman', Times, serif; color: #111; }
     .bank-table td { border: .25mm solid #333; padding: .8mm 1.1mm; height: 5.2mm; vertical-align: middle; overflow-wrap: normal; }
@@ -82,10 +82,10 @@
             <input type="date" id="letterDate" required>
           </label>
           <label for="amount">Trade Advance Amount (Rs.)
-            <input type="number" id="amount" value="100,00,00,000.00" min="0" step="0.01" required>
+            <input type="number" id="amount" value="15000000.00" min="0" step="0.01" required>
           </label>
           <label for="amountWords" class="span-2">Amount in Words
-            <input type="text" id="amountWords" value="Zero Crore Zero Lakhs and Paise Zero Only" required>
+            <input type="text" id="amountWords" value="One Crore Fifty Lakhs Zero and Paise Zero Only" required>
             <span class="hint">Auto-updates when the amount changes; you can edit the wording manually if needed.</span>
           </label>
         </div>
@@ -395,21 +395,25 @@
         pdf.setFontSize(10);
         pdf.text("The amount will be subsequently adjusted with the forth coming funding / Case.", 10, 147.2);
         pdf.text("You Kind consideration is highly solicited and oblige.", 10, 156.2);
-        // Draw the transparent signature artwork first. Text is added afterward so it remains legible on top.
-        // This Chola TA letter uses Director Signature.png, not the round stamp_signature.png.
-        const signatureWidth = 60;
-        const signatureHeight = signatureWidth * directorSignature.naturalHeight / directorSignature.naturalWidth;
-        pdf.addImage(directorSignature, "PNG", 9.2, 168, signatureWidth, signatureHeight, undefined, "FAST");
-
-        // Only "Yours faithfully," is regular. Other sign-off lines are bold as requested.
+        // Sign-off layer order mirrors the preview: "Thanking You" and "Yours faithfully" remain readable;
+        // the signature artwork overlays the embedded company line and the bold Director label.
+        // The company line is already part of Director Signature.png, so do not print it a second time.
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(10.5);
         pdf.text("Thanking You,", 10, 167.2);
         pdf.setFont("helvetica", "normal");
         pdf.text("Yours faithfully,", 10, 175.3);
+
+        // Place Director behind the transparent artwork so the signature crosses it, as requested.
+        pdf.setFont("helvetica", "bold");
+        pdf.text("Director", 10, 215.5);
+        const signatureWidth = 64;
+        const signatureHeight = signatureWidth * directorSignature.naturalHeight / directorSignature.naturalWidth;
+        pdf.addImage(directorSignature, "PNG", 9.2, 161, signatureWidth, signatureHeight, undefined, "FAST");
+
+        // Keep the director's name clear and readable below the signature artwork.
         pdf.setFont("helvetica", "bold");
         pdf.text("(Pawan Kumar Goyal)", 10, 210.0);
-        pdf.text("Director", 10, 215.5);
 
         pdf.setFont("times", "normal");
         pdf.setFontSize(9.5);
