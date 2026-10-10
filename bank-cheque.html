@@ -196,6 +196,15 @@
     }
   });
 
+  /* Credit Request page theke ashle: bank-cheque.html?amount=35000000.00&chequeNo=100491 */
+  (function prefillFromUrl() {
+    const qs = new URLSearchParams(location.search);
+    const amt = qs.get('amount'), no = qs.get('chequeNo');
+    if (amt) $(CFG.amountInput).value = amt;
+    if (no) $(CFG.chequeNoInput).value = no.replace(/\D/g, '').slice(-6);
+    if (amt || no) setStatus('Credit Request form theke Amount ar Cheque Number auto-fill hoyeche.', 'success');
+  })();
+
   (async function init() {
     try {
       await Promise.all([
